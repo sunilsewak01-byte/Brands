@@ -1,0 +1,1828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReconcileX & Portfolio Analytics Studio</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- SheetJS for Excel / CSV processing -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.363.0/dist/umd/lucide.min.js"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+              800: '#0c4a6e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 7px; height: 7px; }
+    ::-webkit-scrollbar-track { background: #f8fafc; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .custom-ring:focus { outline: none; box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.4); }
+    .interactive-card { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+    .interactive-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px -4px rgba(0,0,0,0.08); }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans antialiased">
+  <!-- Top Navigation Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-sky-100">
+          <i data-lucide="activity" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            ReconcileX <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-semibold uppercase tracking-wider">Analytics Suite</span>
+          </h1>
+          <p class="text-xs text-slate-500">Pharma Deduplication & Interactive Portfolio Intelligence</p>
+        </div>
+      </div>
+
+      <!-- Tab Switcher -->
+      <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-semibold">
+        <button id="tabReconcilerBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-sky-700 shadow-sm transition">
+          <i data-lucide="merge" class="w-3.5 h-3.5"></i>
+          <span>Reconcile Engine</span>
+        </button>
+        <button id="tabDashboardBtn" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition">
+          <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i>
+          <span>Portfolio Dashboard</span>
+          <span id="navDataBadge" class="hidden ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-sky-100 text-sky-700">0</span>
+        </button>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-2">
+        <button id="loadMasterDemoBtn" class="text-xs font-semibold px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 transition flex items-center gap-1.5 shadow-sm">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500"></i>
+          <span class="hidden sm:inline">Load Master Sample</span>
+        </button>
+        <button id="resetAllBtn" class="text-xs font-medium px-2.5 py-2 rounded-lg border border-slate-200 hover:bg-rose-50 hover:text-rose-600 text-slate-600 transition flex items-center gap-1">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed top-20 right-4 z-50 transform transition-all duration-300 translate-y-[-20px] opacity-0 pointer-events-none bg-slate-900 text-white text-sm px-4 py-3 rounded-xl shadow-xl flex items-center gap-2.5">
+    <span id="toastIcon"><i data-lucide="info" class="w-4 h-4 text-sky-400"></i></span>
+    <span id="toastMsg">Action completed.</span>
+  </div>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+
+    <!-- ==================== VIEW 1: RECONCILE ENGINE ==================== -->
+    <div id="viewReconciler" class="space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- File Dropzone -->
+        <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                <i data-lucide="upload-cloud" class="w-4 h-4 text-sky-600"></i>
+                1. Upload Data File
+              </h2>
+              <span class="text-xs text-slate-400 font-medium">Supports .xlsx, .xls, .csv</span>
+            </div>
+
+            <div id="dropzone" class="border-2 border-dashed border-slate-200 hover:border-sky-500 rounded-xl p-6 sm:p-8 text-center bg-slate-50/60 hover:bg-sky-50/40 transition cursor-pointer flex flex-col items-center justify-center group relative">
+              <input type="file" id="fileInput" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept=".xlsx,.xls,.csv" />
+              <div class="w-12 h-12 mb-3 rounded-full bg-white shadow-sm border border-slate-200 flex items-center justify-center text-slate-500 group-hover:text-sky-600 group-hover:scale-110 transition">
+                <i data-lucide="file-spreadsheet" class="w-6 h-6"></i>
+              </div>
+              <p class="text-sm font-semibold text-slate-700">
+                <span class="text-sky-600 underline underline-offset-2">Click to browse</span> or drag and drop your spreadsheet
+              </p>
+              <p class="text-xs text-slate-400 mt-1" id="fileInfoText">Reconcile raw multi-row records or load pre-reconciled files</p>
+            </div>
+          </div>
+
+          <div id="activeFileInfo" class="hidden mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-2 text-xs text-slate-600">
+              <span class="p-1 rounded bg-sky-100 text-sky-700 font-bold" id="badgeExt">XLSX</span>
+              <span class="font-medium text-slate-900 truncate max-w-[200px] sm:max-w-xs" id="badgeFileName">data.xlsx</span>
+              <span class="text-slate-400" id="badgeFileSize">0 KB</span>
+            </div>
+            <span class="text-xs text-emerald-600 font-semibold flex items-center gap-1">
+              <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Loaded
+            </span>
+          </div>
+        </div>
+
+        <!-- Rules & Settings -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between space-y-4">
+          <div>
+            <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <i data-lucide="sliders" class="w-4 h-4 text-sky-600"></i>
+              2. Reconcile Rules
+            </h2>
+
+            <div class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5" for="groupColSelect">Primary Key / ID Column</label>
+                <select id="groupColSelect" disabled class="w-full text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 focus:bg-white custom-ring transition disabled:opacity-50">
+                  <option value="">Upload a file first</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5" for="delimiterSelect">Join Delimiter</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <select id="delimiterSelect" class="text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 focus:bg-white custom-ring transition">
+                    <option value="; ">Semicolon (; )</option>
+                    <option value=";">Compact Semicolon (;)</option>
+                    <option value=", ">Comma (, )</option>
+                    <option value=" | ">Pipe ( | )</option>
+                    <option value="custom">Custom...</option>
+                  </select>
+                  <input type="text" id="customDelimiterInput" placeholder="Custom" class="hidden text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 focus:bg-white custom-ring transition" value="; " />
+                </div>
+              </div>
+
+              <div class="pt-2 border-t border-slate-100 space-y-2">
+                <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-700">
+                  <input type="checkbox" id="caseInsensitiveChk" checked class="rounded border-slate-300 text-sky-600 focus:ring-sky-500 h-4 w-4">
+                  <span>Case-insensitive deduplication</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-700">
+                  <input type="checkbox" id="sortValuesChk" class="rounded border-slate-300 text-sky-600 focus:ring-sky-500 h-4 w-4">
+                  <span>Sort combined values alphabetically</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <button id="processBtn" disabled class="w-full mt-4 py-2.5 px-4 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white font-semibold text-sm rounded-xl shadow-sm transition flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
+            <i data-lucide="play" class="w-4 h-4 fill-current"></i>
+            <span>Reconcile & Open Dashboard</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Summary Metric Bar -->
+      <div id="statsSection" class="hidden grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3.5">
+          <div class="p-2.5 rounded-xl bg-slate-100 text-slate-700"><i data-lucide="layers" class="w-5 h-5"></i></div>
+          <div>
+            <p class="text-xs font-medium text-slate-400">Total Input Rows</p>
+            <p class="text-xl font-bold text-slate-900" id="statInputRows">0</p>
+          </div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3.5">
+          <div class="p-2.5 rounded-xl bg-sky-50 text-sky-600"><i data-lucide="check-check" class="w-5 h-5"></i></div>
+          <div>
+            <p class="text-xs font-medium text-slate-400">Consolidated Rows</p>
+            <p class="text-xl font-bold text-sky-700" id="statOutputRows">0</p>
+          </div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3.5">
+          <div class="p-2.5 rounded-xl bg-amber-50 text-amber-600"><i data-lucide="shrink" class="w-5 h-5"></i></div>
+          <div>
+            <p class="text-xs font-medium text-slate-400">Rows Merged</p>
+            <p class="text-xl font-bold text-amber-700" id="statMergedRows">0</p>
+          </div>
+        </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3.5">
+          <div class="p-2.5 rounded-xl bg-indigo-50 text-indigo-600"><i data-lucide="columns" class="w-5 h-5"></i></div>
+          <div>
+            <p class="text-xs font-medium text-slate-400">Columns Retained</p>
+            <p class="text-xl font-bold text-indigo-700" id="statColumns">0</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Raw Reconciled Table Card -->
+      <div id="resultsCard" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+        <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-slate-50/50">
+          <div class="flex items-center gap-3">
+            <div class="relative flex-1 sm:w-64">
+              <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="text" id="searchInput" placeholder="Search rows..." class="w-full text-xs pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg custom-ring text-slate-700" />
+            </div>
+            <span id="matchCounter" class="text-xs text-slate-500 font-medium whitespace-nowrap"></span>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="quickJumpDashBtn" class="text-xs font-semibold px-3 py-2 rounded-lg bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 transition flex items-center gap-1.5">
+              <i data-lucide="pie-chart" class="w-3.5 h-3.5"></i>
+              <span>Launch Dashboard</span>
+            </button>
+            <button id="copyClipboardBtn" class="text-xs font-semibold px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition flex items-center gap-1.5 shadow-sm">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              <span>Copy TSV</span>
+            </button>
+            <button id="exportCsvBtn" class="text-xs font-semibold px-3 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition flex items-center gap-1.5 shadow-sm">
+              <i data-lucide="file-text" class="w-3.5 h-3.5 text-blue-600"></i>
+              <span>Export CSV</span>
+            </button>
+            <button id="exportXlsxBtn" class="text-xs font-semibold px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center gap-1.5 shadow-sm">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i>
+              <span>Export Excel</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto relative min-h-[280px]">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-100/80 text-slate-700 uppercase tracking-wider font-semibold border-b border-slate-200 sticky top-0">
+              <tr id="tableHeadRow"></tr>
+            </thead>
+            <tbody id="tableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+          </table>
+        </div>
+
+        <div class="p-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+          <div class="flex items-center gap-2">
+            <span>Rows per page:</span>
+            <select id="pageSizeSelect" class="bg-slate-50 border border-slate-200 rounded px-2 py-1 text-slate-700 custom-ring">
+              <option value="10">10</option>
+              <option value="25" selected>25</option>
+              <option value="50">50</option>
+            </select>
+            <span id="pageInfoText" class="ml-2"></span>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <button id="prevPageBtn" class="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 disabled:opacity-30">
+              <i data-lucide="chevron-left" class="w-4 h-4"></i>
+            </button>
+            <span id="currentPageNum" class="px-2 font-semibold text-slate-800">1</span>
+            <button id="nextPageBtn" class="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 disabled:opacity-30">
+              <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== VIEW 2: EXECUTIVE ANALYTICAL DASHBOARD ==================== -->
+    <div id="viewDashboard" class="hidden space-y-6">
+      
+      <!-- Interactive Filter Ribbon -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2">
+            <i data-lucide="filter" class="w-4 h-4 text-sky-600"></i>
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-800">Dynamic Cross-Filters</span>
+            <span id="activeFilterBadge" class="hidden text-[11px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-semibold">Active Filter</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="filteredCountLabel" class="text-xs font-medium text-slate-500">Showing all records</span>
+            <button id="clearFiltersBtn" class="text-xs font-semibold px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 transition flex items-center gap-1">
+              <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Clear Filters
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Therapeutic Area</label>
+            <select id="filterTherapeutic" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 focus:bg-white custom-ring"></select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Commercial Team</label>
+            <select id="filterTeam" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 focus:bg-white custom-ring"></select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Product Type</label>
+            <select id="filterProductType" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 focus:bg-white custom-ring"></select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Route</label>
+            <select id="filterRoute" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 focus:bg-white custom-ring"></select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Innovator Company</label>
+            <select id="filterInnovator" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg p-2 focus:bg-white custom-ring"></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI Executive Metric Cards -->
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <!-- Card 1: Total Unified Products -->
+        <div onclick="drilldownFromKPI('all')" class="interactive-card cursor-pointer bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between group hover:border-sky-300">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Products</span>
+            <div class="w-8 h-8 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center group-hover:scale-110 transition"><i data-lucide="package" class="w-4 h-4"></i></div>
+          </div>
+          <div class="mt-2">
+            <span class="text-2xl font-black text-slate-900" id="kpiTotalProducts">0</span>
+            <p class="text-[11px] text-sky-600 font-medium flex items-center gap-0.5 mt-0.5">Click to view all <i data-lucide="arrow-right" class="w-3 h-3"></i></p>
+          </div>
+        </div>
+
+        <!-- Card 2: FDCs / Multi-APIs -->
+        <div onclick="drilldownFromKPI('combinations')" class="interactive-card cursor-pointer bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between group hover:border-indigo-300">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">FDCs / Multi-APIs</span>
+            <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition"><i data-lucide="git-merge" class="w-4 h-4"></i></div>
+          </div>
+          <div class="mt-2">
+            <span class="text-2xl font-black text-indigo-600" id="kpiCombinations">0</span>
+            <p class="text-[11px] text-indigo-600 font-medium flex items-center gap-0.5 mt-0.5">Fixed combinations <i data-lucide="arrow-right" class="w-3 h-3"></i></p>
+          </div>
+        </div>
+
+        <!-- Card 3: Single Active Ingredient -->
+        <div onclick="drilldownFromKPI('single')" class="interactive-card cursor-pointer bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between group hover:border-emerald-300">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Single Active</span>
+            <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition"><i data-lucide="pill" class="w-4 h-4"></i></div>
+          </div>
+          <div class="mt-2">
+            <span class="text-2xl font-black text-emerald-600" id="kpiSingle">0</span>
+            <p class="text-[11px] text-emerald-600 font-medium flex items-center gap-0.5 mt-0.5">Single molecule <i data-lucide="arrow-right" class="w-3 h-3"></i></p>
+          </div>
+        </div>
+
+        <!-- Card 4: Innovators -->
+        <div onclick="drilldownFromKPI('innovators')" class="interactive-card cursor-pointer bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between group hover:border-purple-300">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Innovator Origin</span>
+            <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center group-hover:scale-110 transition"><i data-lucide="award" class="w-4 h-4"></i></div>
+          </div>
+          <div class="mt-2">
+            <span class="text-2xl font-black text-purple-600" id="kpiInnovatorCount">0</span>
+            <p class="text-[11px] text-purple-600 font-medium flex items-center gap-0.5 mt-0.5">Known originators <i data-lucide="arrow-right" class="w-3 h-3"></i></p>
+          </div>
+        </div>
+
+        <!-- Card 5: REPLACED WITH PHARMACOLOGICAL / FUNCTIONAL CLASS -->
+        <div onclick="drilldownFromKPI('pharmClass')" class="interactive-card cursor-pointer bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between group hover:border-amber-300">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider truncate" title="Pharmacological / Functional Class">Pharm Classes</span>
+            <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center group-hover:scale-110 transition"><i data-lucide="dna" class="w-4 h-4"></i></div>
+          </div>
+          <div class="mt-2">
+            <span class="text-2xl font-black text-amber-600" id="kpiPharmClassCount">0</span>
+            <p class="text-[11px] text-amber-600 font-medium flex items-center gap-0.5 mt-0.5">Functional classes <i data-lucide="arrow-right" class="w-3 h-3"></i></p>
+          </div>
+        </div>
+
+        <!-- Card 6: Oral Administration -->
+        <div onclick="drilldownFromKPI('oral')" class="interactive-card cursor-pointer bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between group hover:border-cyan-300">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Oral Delivery</span>
+            <div class="w-8 h-8 rounded-lg bg-cyan-50 text-cyan-600 flex items-center justify-center group-hover:scale-110 transition"><i data-lucide="shield-check" class="w-4 h-4"></i></div>
+          </div>
+          <div class="mt-2">
+            <span class="text-2xl font-black text-cyan-700" id="kpiOralCount">0</span>
+            <p class="text-[11px] text-cyan-600 font-medium flex items-center gap-0.5 mt-0.5">Tablets / Capsules <i data-lucide="arrow-right" class="w-3 h-3"></i></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Section: All interactive -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Chart 1: Therapeutic Area -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                <i data-lucide="activity" class="w-4 h-4 text-sky-600"></i>
+                Therapeutic Area Distribution
+              </h3>
+              <p class="text-[11px] text-slate-400">Click any bar to inspect matching products</p>
+            </div>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-sky-50 text-sky-700 font-bold uppercase">Volume</span>
+          </div>
+          <div class="h-64 relative">
+            <canvas id="chartTherapeutic"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 2: Teams Breakdown -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                <i data-lucide="users" class="w-4 h-4 text-indigo-600"></i>
+                Commercial Teams Allocation
+              </h3>
+              <p class="text-[11px] text-slate-400">Click any team bar to view portfolio details</p>
+            </div>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-bold uppercase">Divisions</span>
+          </div>
+          <div class="h-64 relative">
+            <canvas id="chartTeam"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 3: Product Types (Doughnut) -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                <i data-lucide="pie-chart" class="w-4 h-4 text-emerald-600"></i>
+                Product Classification Mix
+              </h3>
+              <p class="text-[11px] text-slate-400">Click any doughnut slice to isolate products</p>
+            </div>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold uppercase">Type</span>
+          </div>
+          <div class="h-64 relative flex items-center justify-center">
+            <canvas id="chartProductType"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 4: Route of Administration (Doughnut) -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                <i data-lucide="compass" class="w-4 h-4 text-amber-600"></i>
+                Delivery Route Modality
+              </h3>
+              <p class="text-[11px] text-slate-400">Click any slice to filter route</p>
+            </div>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-bold uppercase">Route</span>
+          </div>
+          <div class="h-64 relative flex items-center justify-center">
+            <canvas id="chartRoute"></canvas>
+          </div>
+        </div>
+
+        <!-- Chart 5: Top Innovator Companies -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm lg:col-span-2">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                <i data-lucide="award" class="w-4 h-4 text-purple-600"></i>
+                Top Originator & Innovator Footprint
+              </h3>
+              <p class="text-[11px] text-slate-400">Companies with referenced innovator brands (Excludes unassigned / generic)</p>
+            </div>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-purple-50 text-purple-700 font-bold uppercase">Originator</span>
+          </div>
+          <div class="h-60 relative">
+            <canvas id="chartInnovator"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ==================== MODAL 1: PRODUCT LIST DRILLDOWN ==================== -->
+    <div id="productListModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-6">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-slate-100 animate-in fade-in zoom-in duration-150">
+        
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-sky-100 text-sky-800" id="modalDrillFilterTag">Selection</span>
+              <span class="text-xs text-slate-400" id="modalDrillSubtitle">Filtered view</span>
+            </div>
+            <h3 class="text-base font-bold text-slate-900 mt-0.5" id="modalDrillTitle">
+              Detailed Product List (<span id="modalProductCount">0</span> items)
+            </h3>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="modalExportBtn" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center gap-1">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i> Export Subset
+            </button>
+            <button onclick="closeProductListModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200 transition">
+              <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter / Quick Search within Modal -->
+        <div class="px-6 py-2.5 bg-slate-100/50 border-b border-slate-200 flex items-center gap-3">
+          <div class="relative flex-1">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="modalSearchInput" placeholder="Search within this list (Brand, Composition, Class, Indication)..." class="w-full text-xs pl-9 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg custom-ring text-slate-800" />
+          </div>
+          <span class="text-xs text-slate-500 font-medium" id="modalSearchStats"></span>
+        </div>
+
+        <!-- Modal Table Body -->
+        <div class="p-6 overflow-y-auto overflow-x-auto flex-1">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-100 text-slate-700 uppercase font-semibold sticky top-0 border-b border-slate-200">
+              <tr>
+                <th class="py-2.5 px-3">Product ID</th>
+                <th class="py-2.5 px-3">Brand Name</th>
+                <th class="py-2.5 px-3">Composition / Strength</th>
+                <th class="py-2.5 px-3">Therapeutic Area</th>
+                <th class="py-2.5 px-3">Pharmacological Class</th>
+                <th class="py-2.5 px-3">Team</th>
+                <th class="py-2.5 px-3">Route / Form</th>
+                <th class="py-2.5 px-3">Innovator Brand</th>
+                <th class="py-2.5 px-3 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="modalTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+          </table>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
+          <span>Click <strong class="text-sky-700">View Dossier</strong> on any row to inspect complete clinical & regulatory specs.</span>
+          <button onclick="closeProductListModal()" class="font-semibold px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg transition">
+            Close
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ==================== MODAL 2: SINGLE PRODUCT AUDIT / DOSSIER ==================== -->
+    <div id="dossierModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden border border-slate-100 animate-in fade-in duration-150">
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+          <div>
+            <span class="text-xs uppercase font-bold tracking-wider text-sky-600">Product Portfolio Dossier</span>
+            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2" id="dossierTitle">PRD-0001</h3>
+          </div>
+          <button onclick="closeDossierModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200 transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto space-y-4" id="dossierContent"></div>
+
+        <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-end">
+          <button onclick="closeDossierModal()" class="text-xs font-semibold px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg transition">
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MODAL 3: AUDIT TRAIL MODAL (ORIGINAL RECONCILER) ==================== -->
+    <div id="drilldownModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[85vh] flex flex-col overflow-hidden border border-slate-100 animate-in fade-in zoom-in duration-150">
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+          <div>
+            <span class="text-xs uppercase font-bold tracking-wider text-sky-600">Audit Trail Comparison</span>
+            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2" id="drilldownTitle">
+              Original Rows Merged for: <span class="text-sky-700 font-mono" id="drilldownId">PRD-0002</span>
+            </h3>
+          </div>
+          <button id="closeModalBtn" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200 transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <div class="p-6 overflow-y-auto space-y-5">
+          <div>
+            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Original Source Rows (<span id="modalSourceCount">2</span> rows detected)</h4>
+            <div class="overflow-x-auto border border-slate-200 rounded-xl">
+              <table class="w-full text-left text-xs" id="drilldownSourceTable"></table>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <i data-lucide="check-circle" class="w-4 h-4"></i> Resulting Reconciled Row
+            </h4>
+            <div class="overflow-x-auto border-2 border-emerald-200 bg-emerald-50/20 rounded-xl">
+              <table class="w-full text-left text-xs" id="drilldownTargetTable"></table>
+            </div>
+          </div>
+        </div>
+
+        <div class="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-end">
+          <button id="closeModalBottomBtn" class="text-xs font-semibold px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg transition">
+            Close Viewer
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 py-3 text-center text-xs text-slate-400">
+    Pharmaceutical Portfolio Reconciler & Executive Analytics Suite &bull; Client-Side & Confidential
+  </footer>
+
+  <script>
+    // Global Application State
+    let rawDataset = [];
+    let headersList = [];
+    let reconciledData = [];
+    let groupedSourceMap = {};
+    let filteredData = [];
+    let activeDashboardData = [];
+    let modalCurrentItems = [];
+    let currentPage = 1;
+    let pageSize = 25;
+    let currentFileName = "reconciled_products.xlsx";
+
+    // Chart.js references
+    let chartTherapeuticInst = null;
+    let chartTeamInst = null;
+    let chartProductTypeInst = null;
+    let chartRouteInst = null;
+    let chartInnovatorInst = null;
+
+    // Filter state for Dashboard
+    let dashboardFilters = {
+      therapeutic: "ALL",
+      team: "ALL",
+      productType: "ALL",
+      route: "ALL",
+      innovator: "ALL"
+    };
+
+    // Master Demo Dataset
+    const masterDemoSample = [
+      { "Source Row": "2; 3", "Product ID": "PRD-0001", "Team": "Valensia", "Brand Name": "Ilatab", "Composition": "Elagolix", "Strength": "150 mg; 200 mg", "Formulation": "Oral tablets", "Product Type": "Pharmaceutical", "Therapeutic Area": "Women's Health", "Clinical Condition / Domain": "Endometriosis", "Therapeutic Role": "Hormonal therapy", "Pharmacological / Functional Class": "GnRH antagonist", "Combination / Component Class": "Single ingredient", "Route": "Oral", "Dosage Form": "Tablet", "Innovator Company": "AbbVie", "Innovator Brand": "Orilissa", "Dosage": "150 mg once daily or 200 mg twice daily." },
+      { "Source Row": "4; 5", "Product ID": "PRD-0002", "Team": "Valensia", "Brand Name": "Amgest", "Composition": "Ethinyl Estradiol; Dienogest", "Strength": "30mcg; 2mg", "Formulation": "Oral tablets", "Product Type": "Pharmaceutical", "Therapeutic Area": "Women's Health", "Clinical Condition / Domain": "Contraception", "Therapeutic Role": "Contraception", "Pharmacological / Functional Class": "Combined hormonal contraceptive", "Combination / Component Class": "Combined hormonal contraceptive", "Route": "Oral", "Dosage Form": "Tablet", "Innovator Company": "Bayer", "Innovator Brand": "Valette / Jeanine", "Dosage": "1 tablet daily for 21 consecutive days." },
+      { "Source Row": "6", "Product ID": "PRD-0003", "Team": "Valensia", "Brand Name": "Dagiran", "Composition": "Dydrogesterone", "Strength": "10mg", "Formulation": "Oral tablets", "Product Type": "Pharmaceutical", "Therapeutic Area": "Women's Health", "Clinical Condition / Domain": "Hormonal therapy", "Therapeutic Role": "Hormonal therapy", "Pharmacological / Functional Class": "Progestogen", "Combination / Component Class": "Single ingredient", "Route": "Oral", "Dosage Form": "Tablet", "Innovator Company": "Abbott", "Innovator Brand": "Duphaston", "Dosage": "10 mg twice daily." },
+      { "Source Row": "7", "Product ID": "PRD-0004", "Team": "Valensia", "Brand Name": "Fedate Injection", "Composition": "Ferric Carboxymaltose", "Strength": "500mg", "Formulation": "IV injection / infusion", "Product Type": "Pharmaceutical", "Therapeutic Area": "Hematology", "Clinical Condition / Domain": "Iron deficiency anaemia", "Therapeutic Role": "Iron replacement", "Pharmacological / Functional Class": "Parenteral iron", "Combination / Component Class": "Single ingredient", "Route": "Parenteral", "Dosage Form": "Injection", "Innovator Company": "Vifor Pharma", "Innovator Brand": "Ferinject", "Dosage": "15 mg/kg body weight." },
+      { "Source Row": "8", "Product ID": "PRD-0005", "Team": "Valensia", "Brand Name": "Apcor", "Composition": "HCG", "Strength": "5000 IU", "Formulation": "Injection (IM/SC)", "Product Type": "Pharmaceutical", "Therapeutic Area": "Women's Health", "Clinical Condition / Domain": "Female infertility", "Therapeutic Role": "Fertility induction", "Pharmacological / Functional Class": "Gonadotropin", "Combination / Component Class": "Single ingredient", "Route": "Parenteral", "Dosage Form": "Injection", "Innovator Company": "Merck KGaA", "Innovator Brand": "Pregnyl", "Dosage": "5,000 to 10,000 units IM." },
+      { "Source Row": "9; 10", "Product ID": "PRD-0006", "Team": "Illuma", "Brand Name": "OptiTears Plus", "Composition": "Carboxymethylcellulose; Glycerin", "Strength": "0.5%; 0.9%", "Formulation": "Ophthalmic Drops", "Product Type": "Ophthalmic Pharmaceutical", "Therapeutic Area": "Ophthalmology", "Clinical Condition / Domain": "Dry Eye Disease", "Therapeutic Role": "Lubricant / Tear substitute", "Pharmacological / Functional Class": "Demulcent", "Combination / Component Class": "Multi-component lubricant", "Route": "Ophthalmic", "Dosage Form": "Eye Drops", "Innovator Company": "Allergan", "Innovator Brand": "Refresh Optive", "Dosage": "1-2 drops as needed." },
+      { "Source Row": "11", "Product ID": "PRD-0007", "Team": "Illuma", "Brand Name": "Brimovue", "Composition": "Brimonidine Tartrate", "Strength": "0.15%", "Formulation": "Ophthalmic Drops", "Product Type": "Ophthalmic Pharmaceutical", "Therapeutic Area": "Ophthalmology", "Clinical Condition / Domain": "Glaucoma", "Therapeutic Role": "Intraocular pressure lowering", "Pharmacological / Functional Class": "Alpha-2 agonist", "Combination / Component Class": "Single ingredient", "Route": "Ophthalmic", "Dosage Form": "Eye Drops", "Innovator Company": "Allergan", "Innovator Brand": "Alphagan P", "Dosage": "1 drop 3 times daily." },
+      { "Source Row": "12; 13", "Product ID": "PRD-0008", "Team": "Illuma", "Brand Name": "Dorzo-Tim", "Composition": "Dorzolamide; Timolol", "Strength": "2%; 0.5%", "Formulation": "Ophthalmic Drops", "Product Type": "Ophthalmic Pharmaceutical", "Therapeutic Area": "Ophthalmology", "Clinical Condition / Domain": "Ocular Hypertension", "Therapeutic Role": "Glaucoma combination therapy", "Pharmacological / Functional Class": "CAI + Beta Blocker", "Combination / Component Class": "Fixed-dose combination", "Route": "Ophthalmic", "Dosage Form": "Eye Drops", "Innovator Company": "Merck & Co.", "Innovator Brand": "Cosopt", "Dosage": "1 drop twice daily." },
+      { "Source Row": "14", "Product ID": "PRD-0009", "Team": "Zillion", "Brand Name": "DermaSoft Cleanser", "Composition": "Cetyl Alcohol; Stearyl Alcohol", "Strength": "2%; 1.5%", "Formulation": "Topical Lotion", "Product Type": "Dermocosmetic / Personal Care", "Therapeutic Area": "Dermatology", "Clinical Condition / Domain": "Sensitive Skin / Atopic Eczema", "Therapeutic Role": "Barrier repair moisturizer", "Pharmacological / Functional Class": "Emollient", "Combination / Component Class": "Multi-agent cosmetic", "Route": "Topical / Local", "Dosage Form": "Lotion", "Innovator Company": "Galderma", "Innovator Brand": "Cetaphil Gentle Cleanser", "Dosage": "Apply liberally twice daily." },
+      { "Source Row": "15; 16", "Product ID": "PRD-0010", "Team": "Zillion", "Brand Name": "Adapa-Gel Duo", "Composition": "Adapalene; Benzoyl Peroxide", "Strength": "0.1%; 2.5%", "Formulation": "Topical Gel", "Product Type": "Dermatology Pharmaceutical", "Therapeutic Area": "Dermatology", "Clinical Condition / Domain": "Acne Vulgaris", "Therapeutic Role": "Retinoid + Antimicrobial", "Pharmacological / Functional Class": "Keratolytic & Retinoid", "Combination / Component Class": "Fixed-dose combination", "Route": "Topical / Local", "Dosage Form": "Gel", "Innovator Company": "Galderma", "Innovator Brand": "Epiduo", "Dosage": "Apply thin film once daily at bedtime." },
+      { "Source Row": "17", "Product ID": "PRD-0011", "Team": "Mexlon", "Brand Name": "GlycoMet Duo", "Composition": "Metformin; Glimepiride", "Strength": "500mg; 2mg", "Formulation": "Oral tablets", "Product Type": "Pharmaceutical", "Therapeutic Area": "Endocrinology & Metabolic", "Clinical Condition / Domain": "Type 2 Diabetes Mellitus", "Therapeutic Role": "Glycemic control", "Pharmacological / Functional Class": "Biguanide + Sulfonylurea", "Combination / Component Class": "Fixed-dose combination", "Route": "Oral", "Dosage Form": "Tablet", "Innovator Company": "Sanofi", "Innovator Brand": "Amaryl M", "Dosage": "1 tablet daily with breakfast." },
+      { "Source Row": "18", "Product ID": "PRD-0012", "Team": "Maxcor", "Brand Name": "Telmi-Amlo Trio", "Composition": "Telmisartan; Amlodipine; Hydrochlorothiazide", "Strength": "40mg; 5mg; 12.5mg", "Formulation": "Oral tablets", "Product Type": "Pharmaceutical", "Therapeutic Area": "Cardiology", "Clinical Condition / Domain": "Essential Hypertension", "Therapeutic Role": "Blood pressure reduction", "Pharmacological / Functional Class": "ARB + CCB + Diuretic", "Combination / Component Class": "Triple Fixed combination", "Route": "Oral", "Dosage Form": "Tablet", "Innovator Company": "Boehringer Ingelheim", "Innovator Brand": "Micardis Plus / Twynsta", "Dosage": "1 tablet once daily." },
+      { "Source Row": "19", "Product ID": "PRD-0013", "Team": "Axys", "Brand Name": "Fluti-Nase Relief", "Composition": "Fluticasone Furoate; Azelastine", "Strength": "27.5mcg; 137mcg", "Formulation": "Nasal Spray", "Product Type": "Pharmaceutical", "Therapeutic Area": "Respiratory & Allergy", "Clinical Condition / Domain": "Allergic Rhinitis", "Therapeutic Role": "Anti-inflammatory & Antihistamine", "Pharmacological / Functional Class": "Corticosteroid + H1 Antagonist", "Combination / Component Class": "Fixed-dose combination", "Route": "Topical / Local", "Dosage Form": "Spray", "Innovator Company": "Mylan", "Innovator Brand": "Dymista", "Dosage": "1 spray per nostril twice daily." },
+      { "Source Row": "20", "Product ID": "PRD-0014", "Team": "Avecea", "Brand Name": "BioCal-D3 Forte", "Composition": "Calcium Carbonate; Vitamin D3; Magnesium", "Strength": "500mg; 400 IU; 100mg", "Formulation": "Oral Tablet", "Product Type": "Nutraceutical / Supplement", "Therapeutic Area": "Musculoskeletal & Bone Health", "Clinical Condition / Domain": "Osteoporosis & Osteopenia", "Therapeutic Role": "Bone mineral density support", "Pharmacological / Functional Class": "Mineral Supplement", "Combination / Component Class": "Nutritional Complex", "Route": "Oral", "Dosage Form": "Tablet", "Innovator Company": "Pfizer", "Innovator Brand": "Caltrate 600+D3", "Dosage": "1 tablet daily after food." }
+    ];
+
+    // DOM Elements
+    const tabReconcilerBtn = document.getElementById('tabReconcilerBtn');
+    const tabDashboardBtn = document.getElementById('tabDashboardBtn');
+    const viewReconciler = document.getElementById('viewReconciler');
+    const viewDashboard = document.getElementById('viewDashboard');
+    const navDataBadge = document.getElementById('navDataBadge');
+    const fileInput = document.getElementById('fileInput');
+    const dropzone = document.getElementById('dropzone');
+    const groupColSelect = document.getElementById('groupColSelect');
+    const delimiterSelect = document.getElementById('delimiterSelect');
+    const customDelimiterInput = document.getElementById('customDelimiterInput');
+    const caseInsensitiveChk = document.getElementById('caseInsensitiveChk');
+    const sortValuesChk = document.getElementById('sortValuesChk');
+    const processBtn = document.getElementById('processBtn');
+    const statsSection = document.getElementById('statsSection');
+    const resultsCard = document.getElementById('resultsCard');
+    const tableHeadRow = document.getElementById('tableHeadRow');
+    const tableBody = document.getElementById('tableBody');
+    const searchInput = document.getElementById('searchInput');
+    const matchCounter = document.getElementById('matchCounter');
+    const pageSizeSelect = document.getElementById('pageSizeSelect');
+    const pageInfoText = document.getElementById('pageInfoText');
+    const prevPageBtn = document.getElementById('prevPageBtn');
+    const nextPageBtn = document.getElementById('nextPageBtn');
+    const currentPageNum = document.getElementById('currentPageNum');
+    const loadMasterDemoBtn = document.getElementById('loadMasterDemoBtn');
+    const resetAllBtn = document.getElementById('resetAllBtn');
+    const quickJumpDashBtn = document.getElementById('quickJumpDashBtn');
+    const copyClipboardBtn = document.getElementById('copyClipboardBtn');
+    const exportCsvBtn = document.getElementById('exportCsvBtn');
+    const exportXlsxBtn = document.getElementById('exportXlsxBtn');
+    const activeFileInfo = document.getElementById('activeFileInfo');
+    const badgeFileName = document.getElementById('badgeFileName');
+    const badgeFileSize = document.getElementById('badgeFileSize');
+    const badgeExt = document.getElementById('badgeExt');
+
+    // Dashboard Filter DOMs
+    const filterTherapeutic = document.getElementById('filterTherapeutic');
+    const filterTeam = document.getElementById('filterTeam');
+    const filterProductType = document.getElementById('filterProductType');
+    const filterRoute = document.getElementById('filterRoute');
+    const filterInnovator = document.getElementById('filterInnovator');
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+    const activeFilterBadge = document.getElementById('activeFilterBadge');
+    const filteredCountLabel = document.getElementById('filteredCountLabel');
+
+    // Modal DOMs
+    const productListModal = document.getElementById('productListModal');
+    const modalTableBody = document.getElementById('modalTableBody');
+    const modalSearchInput = document.getElementById('modalSearchInput');
+    const modalSearchStats = document.getElementById('modalSearchStats');
+    const modalDrillTitle = document.getElementById('modalDrillTitle');
+    const modalDrillFilterTag = document.getElementById('modalDrillFilterTag');
+    const modalDrillSubtitle = document.getElementById('modalDrillSubtitle');
+    const modalProductCount = document.getElementById('modalProductCount');
+    const modalExportBtn = document.getElementById('modalExportBtn');
+    const dossierModal = document.getElementById('dossierModal');
+    const drilldownModal = document.getElementById('drilldownModal');
+
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      loadMasterData(masterDemoSample, "Product_Parsing_Master_Corrected.xlsx");
+    });
+
+    // Tab Switcher
+    tabReconcilerBtn.addEventListener('click', () => switchView('reconciler'));
+    tabDashboardBtn.addEventListener('click', () => switchView('dashboard'));
+    quickJumpDashBtn.addEventListener('click', () => switchView('dashboard'));
+
+    function switchView(viewName) {
+      if (viewName === 'reconciler') {
+        viewReconciler.classList.remove('hidden');
+        viewDashboard.classList.add('hidden');
+        tabReconcilerBtn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-sky-700 shadow-sm transition";
+        tabDashboardBtn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition";
+      } else {
+        if (!reconciledData || reconciledData.length === 0) {
+          showToast("Please upload or reconcile data first!");
+          return;
+        }
+        viewReconciler.classList.add('hidden');
+        viewDashboard.classList.remove('hidden');
+        tabDashboardBtn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-sky-700 shadow-sm transition";
+        tabReconcilerBtn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition";
+        refreshDashboard();
+      }
+      lucide.createIcons();
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      toastMsg.textContent = message;
+      toast.classList.remove('translate-y-[-20px]', 'opacity-0', 'pointer-events-none');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.add('translate-y-[-20px]', 'opacity-0', 'pointer-events-none');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 3000);
+    }
+
+    delimiterSelect.addEventListener('change', () => {
+      if (delimiterSelect.value === 'custom') {
+        customDelimiterInput.classList.remove('hidden');
+        customDelimiterInput.focus();
+      } else {
+        customDelimiterInput.classList.add('hidden');
+      }
+    });
+
+    function getActiveDelimiter() {
+      if (delimiterSelect.value === 'custom') {
+        return customDelimiterInput.value || '; ';
+      }
+      return delimiterSelect.value;
+    }
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) handleIncomingFile(file);
+    });
+
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('border-sky-500', 'bg-sky-50/70');
+    });
+    dropzone.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('border-sky-500', 'bg-sky-50/70');
+    });
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('border-sky-500', 'bg-sky-50/70');
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        handleIncomingFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    function handleIncomingFile(file) {
+      currentFileName = file.name.replace(/\.[^/.]+$/, "") + "_reconciled.xlsx";
+      badgeFileName.textContent = file.name;
+      badgeFileSize.textContent = (file.size / 1024).toFixed(1) + ' KB';
+      const ext = file.name.split('.').pop().toUpperCase();
+      badgeExt.textContent = ext;
+      activeFileInfo.classList.remove('hidden');
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = new Uint8Array(event.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const parsed = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+          if (!parsed || parsed.length === 0) {
+            showToast("The selected sheet appears to be empty.");
+            return;
+          }
+
+          rawDataset = parsed;
+          headersList = Object.keys(rawDataset[0]);
+          populateHeaderSelect();
+          processBtn.removeAttribute('disabled');
+
+          const isPreReconciled = headersList.includes("Product ID") && headersList.includes("Therapeutic Area");
+          if (isPreReconciled) {
+            executeReconciliation();
+            showToast(`Loaded ${rawDataset.length} rows. Direct intelligence view ready!`);
+          } else {
+            showToast(`Loaded ${rawDataset.length} rows. Ready to reconcile.`);
+          }
+        } catch (err) {
+          console.error("Error reading file:", err);
+          showToast("Failed to parse file. Please verify format.");
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function populateHeaderSelect() {
+      groupColSelect.innerHTML = '';
+      groupColSelect.removeAttribute('disabled');
+
+      let autoSelected = headersList[0];
+      const matchPatterns = [/product.*id/i, /prod.*id/i, /^id$/i, /code/i, /sku/i, /item.*id/i];
+
+      for (const pattern of matchPatterns) {
+        const found = headersList.find(h => pattern.test(h.trim()));
+        if (found) {
+          autoSelected = found;
+          break;
+        }
+      }
+
+      headersList.forEach(col => {
+        const opt = document.createElement('option');
+        opt.value = col;
+        opt.textContent = col;
+        if (col === autoSelected) opt.selected = true;
+        groupColSelect.appendChild(opt);
+      });
+    }
+
+    loadMasterDemoBtn.addEventListener('click', () => {
+      loadMasterData(masterDemoSample, "Product_Parsing_Master_Corrected.xlsx");
+    });
+
+    function loadMasterData(dataset, filename) {
+      rawDataset = JSON.parse(JSON.stringify(dataset));
+      headersList = Object.keys(rawDataset[0]);
+      currentFileName = filename;
+      badgeFileName.textContent = filename;
+      badgeFileSize.textContent = "28.4 KB";
+      badgeExt.textContent = "SAMPLE";
+      activeFileInfo.classList.remove('hidden');
+      populateHeaderSelect();
+      processBtn.removeAttribute('disabled');
+      executeReconciliation();
+      showToast("Pharma Master dataset loaded into Engine and Analytics!");
+    }
+
+    processBtn.addEventListener('click', () => {
+      executeReconciliation();
+      switchView('dashboard');
+    });
+
+    function executeReconciliation() {
+      if (!rawDataset || rawDataset.length === 0) return;
+
+      const groupKey = groupColSelect.value || headersList[0];
+      const delimiter = getActiveDelimiter();
+      const caseInsensitive = caseInsensitiveChk.checked;
+      const sortValues = sortValuesChk.checked;
+
+      groupedSourceMap = {};
+      const groups = new Map();
+
+      for (let i = 0; i < rawDataset.length; i++) {
+        const row = rawDataset[i];
+        const rawKeyVal = row[groupKey] !== undefined ? String(row[groupKey]).trim() : "";
+        const idKey = rawKeyVal === "" ? `__EMPTY_KEY_${i}__` : rawKeyVal;
+
+        if (!groups.has(idKey)) {
+          groups.set(idKey, []);
+          groupedSourceMap[idKey] = [];
+        }
+        groups.get(idKey).push(row);
+        groupedSourceMap[idKey].push(row);
+      }
+
+      reconciledData = [];
+      groups.forEach((rows, idKey) => {
+        const unifiedRow = {};
+        unifiedRow[groupKey] = rows[0][groupKey] || "";
+        unifiedRow["__row_count__"] = rows.length;
+        unifiedRow["__group_id__"] = idKey;
+
+        headersList.forEach(col => {
+          if (col === groupKey) return;
+
+          const collectedValues = [];
+          const seenSet = new Set();
+
+          rows.forEach(r => {
+            const rawVal = r[col];
+            if (rawVal === undefined || rawVal === null) return;
+            const strVal = String(rawVal).trim();
+            if (strVal === "") return;
+
+            const parts = strVal.split(delimiter).map(p => p.trim()).filter(Boolean);
+            const items = parts.length > 0 ? parts : [strVal];
+
+            items.forEach(val => {
+              const lookupKey = caseInsensitive ? val.toLowerCase() : val;
+              if (!seenSet.has(lookupKey)) {
+                seenSet.add(lookupKey);
+                collectedValues.push(val);
+              }
+            });
+          });
+
+          if (sortValues) {
+            collectedValues.sort((a, b) => a.localeCompare(undefined, { numeric: true, sensitivity: 'base' }));
+          }
+
+          unifiedRow[col] = collectedValues.join(delimiter);
+        });
+
+        reconciledData.push(unifiedRow);
+      });
+
+      document.getElementById('statInputRows').textContent = rawDataset.length.toLocaleString();
+      document.getElementById('statOutputRows').textContent = reconciledData.length.toLocaleString();
+      document.getElementById('statMergedRows').textContent = (rawDataset.length - reconciledData.length).toLocaleString();
+      document.getElementById('statColumns').textContent = headersList.length;
+
+      navDataBadge.textContent = reconciledData.length;
+      navDataBadge.classList.remove('hidden');
+
+      statsSection.classList.remove('hidden');
+      resultsCard.classList.remove('hidden');
+
+      filteredData = [...reconciledData];
+      currentPage = 1;
+      buildTableHeader();
+      renderTableBody();
+      populateDashboardFilterOptions();
+      refreshDashboard();
+      lucide.createIcons();
+    }
+
+    function buildTableHeader() {
+      tableHeadRow.innerHTML = `
+        <th class="py-3 px-4 w-12 text-center text-slate-400">#</th>
+        <th class="py-3 px-4 w-20 text-center">Merged</th>
+      `;
+      headersList.forEach(header => {
+        const th = document.createElement('th');
+        th.className = "py-3 px-4 whitespace-nowrap text-slate-700";
+        if (header === groupColSelect.value) {
+          th.innerHTML = `<span class="inline-flex items-center gap-1.5 text-sky-700 font-bold bg-sky-50 px-2 py-0.5 rounded border border-sky-200">${header} <i data-lucide="key" class="w-3 h-3 text-sky-600"></i></span>`;
+        } else {
+          th.textContent = header;
+        }
+        tableHeadRow.appendChild(th);
+      });
+      lucide.createIcons();
+    }
+
+    function renderTableBody() {
+      tableBody.innerHTML = '';
+      const total = filteredData.length;
+      matchCounter.textContent = `${total} reconciled records`;
+
+      if (total === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="${headersList.length + 2}" class="text-center py-12 text-slate-400">
+              <i data-lucide="database" class="w-8 h-8 mx-auto mb-2 opacity-40"></i>
+              No matching records found.
+            </td>
+          </tr>
+        `;
+        lucide.createIcons();
+        updatePaginationInfo(0, 0, 0);
+        return;
+      }
+
+      const startIdx = (currentPage - 1) * pageSize;
+      const endIdx = Math.min(startIdx + pageSize, total);
+      const pageRows = filteredData.slice(startIdx, endIdx);
+      const delimiter = getActiveDelimiter();
+
+      pageRows.forEach((row, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition border-b border-slate-100 group";
+
+        const mergeCount = row["__row_count__"] || 1;
+        const groupId = row["__group_id__"];
+        const badgeColor = mergeCount > 1 
+          ? "bg-amber-100 text-amber-800 border-amber-200" 
+          : "bg-slate-100 text-slate-500 border-slate-200";
+
+        let html = `
+          <td class="py-2.5 px-4 text-center text-slate-400 font-mono text-[11px]">${startIdx + idx + 1}</td>
+          <td class="py-2.5 px-4 text-center">
+            <button onclick="openDrilldown('${groupId}')" class="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border ${badgeColor} hover:scale-105 transition" title="Inspect source rows">
+              <i data-lucide="layers" class="w-2.5 h-2.5"></i> ${mergeCount}
+            </button>
+          </td>
+        `;
+
+        headersList.forEach(col => {
+          const val = row[col] !== undefined ? String(row[col]) : "";
+          const isKey = col === groupColSelect.value;
+          
+          if (isKey) {
+            html += `<td class="py-2.5 px-4 font-mono font-semibold text-sky-800 whitespace-nowrap">${val}</td>`;
+          } else {
+            const hasMultiple = val.includes(delimiter);
+            const content = hasMultiple 
+              ? `<span class="text-slate-900 font-medium">${val}</span>`
+              : `<span class="text-slate-600">${val || '<span class="text-slate-300 italic">-</span>'}</span>`;
+            html += `<td class="py-2.5 px-4 max-w-xs truncate" title="${val.replace(/"/g, '&quot;')}">${content}</td>`;
+          }
+        });
+
+        tr.innerHTML = html;
+        tableBody.appendChild(tr);
+      });
+
+      updatePaginationInfo(startIdx + 1, endIdx, total);
+      lucide.createIcons();
+    }
+
+    function updatePaginationInfo(start, end, total) {
+      currentPageNum.textContent = currentPage;
+      pageInfoText.textContent = total > 0 ? `Showing ${start} to ${end} of ${total}` : 'No rows';
+      prevPageBtn.disabled = currentPage <= 1;
+      nextPageBtn.disabled = end >= total;
+    }
+
+    prevPageBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderTableBody(); } });
+    nextPageBtn.addEventListener('click', () => {
+      const maxPages = Math.ceil(filteredData.length / pageSize);
+      if (currentPage < maxPages) { currentPage++; renderTableBody(); }
+    });
+    pageSizeSelect.addEventListener('change', (e) => {
+      pageSize = parseInt(e.target.value, 10);
+      currentPage = 1;
+      renderTableBody();
+    });
+
+    searchInput.addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase().trim();
+      if (!term) {
+        filteredData = [...reconciledData];
+      } else {
+        filteredData = reconciledData.filter(row => {
+          return headersList.some(col => {
+            const val = row[col] ? String(row[col]).toLowerCase() : "";
+            return val.includes(term);
+          });
+        });
+      }
+      currentPage = 1;
+      renderTableBody();
+    });
+
+    // =========================================================
+    // FIELD MAPPINGS & DASHBOARD HELPERS
+    // =========================================================
+
+    function findFieldKey(candidates) {
+      for (const c of candidates) {
+        const found = headersList.find(h => h.trim().toLowerCase() === c.toLowerCase());
+        if (found) return found;
+      }
+      for (const c of candidates) {
+        const found = headersList.find(h => h.toLowerCase().includes(c.toLowerCase()));
+        if (found) return found;
+      }
+      return null;
+    }
+
+    function getStandardizedFields() {
+      return {
+        id: groupColSelect.value || headersList[0],
+        brand: findFieldKey(['Brand Name', 'Brand', 'Product Name', 'Item Name']) || headersList[1] || 'Brand Name',
+        composition: findFieldKey(['Composition', 'Generic Name', 'Molecules', 'API', 'Active Ingredient']) || 'Composition',
+        strength: findFieldKey(['Strength', 'Potency', 'Dose Strength']) || 'Strength',
+        therapeutic: findFieldKey(['Therapeutic Area', 'Therapy', 'Indication Group', 'Domain']) || 'Therapeutic Area',
+        condition: findFieldKey(['Clinical Condition / Domain', 'Clinical Condition', 'Indication', 'Disease']) || 'Clinical Condition / Domain',
+        pharmClass: findFieldKey(['Pharmacological / Functional Class', 'Functional Class', 'Pharmacological Class', 'Class']) || 'Pharmacological / Functional Class',
+        productType: findFieldKey(['Product Type', 'Category', 'Classification', 'Segment']) || 'Product Type',
+        team: findFieldKey(['Team', 'Division', 'Sales Team', 'Franchise', 'Business Unit']) || 'Team',
+        route: findFieldKey(['Route', 'Administration Route', 'Delivery Route']) || 'Route',
+        dosageForm: findFieldKey(['Dosage Form', 'Form', 'Formulation']) || 'Dosage Form',
+        innovatorCompany: findFieldKey(['Innovator Company', 'Originator', 'Company', 'Manufacturer']) || 'Innovator Company',
+        innovatorBrand: findFieldKey(['Innovator Brand', 'Originator Brand']) || 'Innovator Brand',
+        dosage: findFieldKey(['Dosage', 'Directions', 'Posology']) || 'Dosage'
+      };
+    }
+
+    function populateDashboardFilterOptions() {
+      const f = getStandardizedFields();
+
+      function fillSelect(selectElem, colKey) {
+        selectElem.innerHTML = '<option value="ALL">All Categories</option>';
+        if (!colKey || !headersList.includes(colKey)) return;
+
+        const uniqueVals = new Set();
+        reconciledData.forEach(row => {
+          const val = String(row[colKey] || '').trim();
+          if (val && val !== 'Not available' && val !== 'null') {
+            uniqueVals.add(val);
+          }
+        });
+
+        Array.from(uniqueVals).sort().forEach(val => {
+          const opt = document.createElement('option');
+          opt.value = val;
+          opt.textContent = val;
+          selectElem.appendChild(opt);
+        });
+      }
+
+      fillSelect(filterTherapeutic, f.therapeutic);
+      fillSelect(filterTeam, f.team);
+      fillSelect(filterProductType, f.productType);
+      fillSelect(filterRoute, f.route);
+      fillSelect(filterInnovator, f.innovatorCompany);
+    }
+
+    [filterTherapeutic, filterTeam, filterProductType, filterRoute, filterInnovator].forEach(sel => {
+      sel.addEventListener('change', () => {
+        dashboardFilters.therapeutic = filterTherapeutic.value;
+        dashboardFilters.team = filterTeam.value;
+        dashboardFilters.productType = filterProductType.value;
+        dashboardFilters.route = filterRoute.value;
+        dashboardFilters.innovator = filterInnovator.value;
+        refreshDashboard();
+      });
+    });
+
+    clearFiltersBtn.addEventListener('click', () => {
+      filterTherapeutic.value = "ALL";
+      filterTeam.value = "ALL";
+      filterProductType.value = "ALL";
+      filterRoute.value = "ALL";
+      filterInnovator.value = "ALL";
+      dashboardFilters = { therapeutic: "ALL", team: "ALL", productType: "ALL", route: "ALL", innovator: "ALL" };
+      refreshDashboard();
+    });
+
+    function getActiveFilteredData() {
+      const f = getStandardizedFields();
+      return reconciledData.filter(row => {
+        if (dashboardFilters.therapeutic !== "ALL" && String(row[f.therapeutic] || '') !== dashboardFilters.therapeutic) return false;
+        if (dashboardFilters.team !== "ALL" && String(row[f.team] || '') !== dashboardFilters.team) return false;
+        if (dashboardFilters.productType !== "ALL" && String(row[f.productType] || '') !== dashboardFilters.productType) return false;
+        if (dashboardFilters.route !== "ALL" && String(row[f.route] || '') !== dashboardFilters.route) return false;
+        if (dashboardFilters.innovator !== "ALL" && String(row[f.innovatorCompany] || '') !== dashboardFilters.innovator) return false;
+        return true;
+      });
+    }
+
+    function refreshDashboard() {
+      if (reconciledData.length === 0) return;
+      activeDashboardData = getActiveFilteredData();
+      const f = getStandardizedFields();
+
+      const hasActiveFilter = Object.values(dashboardFilters).some(v => v !== "ALL");
+      if (hasActiveFilter) {
+        activeFilterBadge.classList.remove('hidden');
+        filteredCountLabel.innerHTML = `Filtered: <strong class="text-sky-700">${activeDashboardData.length}</strong> of ${reconciledData.length}`;
+      } else {
+        activeFilterBadge.classList.add('hidden');
+        filteredCountLabel.textContent = `Showing all ${reconciledData.length} products`;
+      }
+
+      // 1. Calculate KPI Metrics
+      const totalCount = activeDashboardData.length;
+      let combinationCount = 0;
+      let singleCount = 0;
+      let knownInnovatorCount = 0;
+      let oralCount = 0;
+      const uniquePharmClasses = new Set();
+
+      activeDashboardData.forEach(r => {
+        const comp = String(r[f.composition] || '');
+        const route = String(r[f.route] || '').toLowerCase();
+        const inn = String(r[f.innovatorCompany] || '').toLowerCase();
+        const pClass = String(r[f.pharmClass] || '').trim();
+
+        if (comp.includes(';') || comp.includes('+') || comp.includes(',')) {
+          combinationCount++;
+        } else {
+          singleCount++;
+        }
+
+        if (inn && inn !== 'not available' && inn !== '-' && inn !== 'generic') {
+          knownInnovatorCount++;
+        }
+        if (route.includes('oral')) {
+          oralCount++;
+        }
+        if (pClass && pClass !== 'Not available' && pClass !== '-' && pClass !== 'null') {
+          uniquePharmClasses.add(pClass);
+        }
+      });
+
+      document.getElementById('kpiTotalProducts').textContent = totalCount;
+      document.getElementById('kpiCombinations').textContent = combinationCount;
+      document.getElementById('kpiSingle').textContent = singleCount;
+      document.getElementById('kpiInnovatorCount').textContent = knownInnovatorCount;
+      document.getElementById('kpiPharmClassCount').textContent = uniquePharmClasses.size;
+      document.getElementById('kpiOralCount').textContent = oralCount;
+
+      // 2. Render Interactive Charts
+      renderTherapeuticChart(activeDashboardData, f);
+      renderTeamChart(activeDashboardData, f);
+      renderProductTypeChart(activeDashboardData, f);
+      renderRouteChart(activeDashboardData, f);
+      renderInnovatorChart(activeDashboardData, f);
+    }
+
+    function countByField(dataset, fieldKey) {
+      const counts = {};
+      dataset.forEach(r => {
+        let val = String(r[fieldKey] || '').trim();
+        if (!val || val === 'null' || val === 'undefined') val = 'Unassigned';
+        counts[val] = (counts[val] || 0) + 1;
+      });
+      return counts;
+    }
+
+    function renderTherapeuticChart(data, f) {
+      const ctx = document.getElementById('chartTherapeutic').getContext('2d');
+      const counts = countByField(data, f.therapeutic);
+      const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]).slice(0, 10);
+      const labels = sorted.map(s => s[0]);
+      const values = sorted.map(s => s[1]);
+
+      if (chartTherapeuticInst) chartTherapeuticInst.destroy();
+      chartTherapeuticInst = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Products',
+            data: values,
+            backgroundColor: 'rgba(2, 132, 199, 0.85)',
+            hoverBackgroundColor: 'rgba(3, 105, 161, 1)',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { afterLabel: () => '👉 Click to inspect products' } }
+          },
+          scales: {
+            x: { grid: { color: '#f1f5f9' }, ticks: { stepSize: 1 } },
+            y: { grid: { display: false } }
+          },
+          onClick: (evt, elements) => {
+            if (elements.length > 0) {
+              const idx = elements[0].index;
+              const selectedArea = labels[idx];
+              openProductListModalByCriteria('Therapeutic Area', selectedArea, r => String(r[f.therapeutic] || '').trim() === selectedArea);
+            }
+          }
+        }
+      });
+    }
+
+    function renderTeamChart(data, f) {
+      const ctx = document.getElementById('chartTeam').getContext('2d');
+      const counts = countByField(data, f.team);
+      const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]).slice(0, 10);
+      const labels = sorted.map(s => s[0]);
+      const values = sorted.map(s => s[1]);
+
+      if (chartTeamInst) chartTeamInst.destroy();
+      chartTeamInst = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'SKUs',
+            data: values,
+            backgroundColor: 'rgba(99, 102, 241, 0.85)',
+            hoverBackgroundColor: 'rgba(79, 70, 229, 1)',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { afterLabel: () => '👉 Click to inspect team products' } }
+          },
+          scales: {
+            y: { grid: { color: '#f1f5f9' }, ticks: { stepSize: 1 } },
+            x: { grid: { display: false } }
+          },
+          onClick: (evt, elements) => {
+            if (elements.length > 0) {
+              const idx = elements[0].index;
+              const selectedTeam = labels[idx];
+              openProductListModalByCriteria('Commercial Team', selectedTeam, r => String(r[f.team] || '').trim() === selectedTeam);
+            }
+          }
+        }
+      });
+    }
+
+    function renderProductTypeChart(data, f) {
+      const ctx = document.getElementById('chartProductType').getContext('2d');
+      const counts = countByField(data, f.productType);
+      const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]);
+      const labels = sorted.map(s => s[0]);
+      const values = sorted.map(s => s[1]);
+      const colors = ['#0284c7', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#64748b', '#06b6d4'];
+
+      if (chartProductTypeInst) chartProductTypeInst.destroy();
+      chartProductTypeInst = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: colors.slice(0, labels.length),
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } },
+            tooltip: { callbacks: { afterLabel: () => '👉 Click to isolate products' } }
+          },
+          onClick: (evt, elements) => {
+            if (elements.length > 0) {
+              const idx = elements[0].index;
+              const selectedType = labels[idx];
+              openProductListModalByCriteria('Product Type', selectedType, r => String(r[f.productType] || '').trim() === selectedType);
+            }
+          }
+        }
+      });
+    }
+
+    function renderRouteChart(data, f) {
+      const ctx = document.getElementById('chartRoute').getContext('2d');
+      const counts = countByField(data, f.route);
+      const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]);
+      const labels = sorted.map(s => s[0]);
+      const values = sorted.map(s => s[1]);
+      const colors = ['#0ea5e9', '#3b82f6', '#6366f1', '#14b8a6', '#f97316', '#a855f7'];
+
+      if (chartRouteInst) chartRouteInst.destroy();
+      chartRouteInst = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: colors.slice(0, labels.length),
+            borderWidth: 2,
+            borderColor: '#ffffff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } },
+            tooltip: { callbacks: { afterLabel: () => '👉 Click to inspect delivery route' } }
+          },
+          onClick: (evt, elements) => {
+            if (elements.length > 0) {
+              const idx = elements[0].index;
+              const selectedRoute = labels[idx];
+              openProductListModalByCriteria('Delivery Route', selectedRoute, r => String(r[f.route] || '').trim() === selectedRoute);
+            }
+          }
+        }
+      });
+    }
+
+    function renderInnovatorChart(data, f) {
+      const ctx = document.getElementById('chartInnovator').getContext('2d');
+      const counts = {};
+      data.forEach(r => {
+        const val = String(r[f.innovatorCompany] || '').trim();
+        if (val && val !== 'Not available' && val !== '-' && val !== 'Unassigned' && val !== 'null') {
+          counts[val] = (counts[val] || 0) + 1;
+        }
+      });
+
+      const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]).slice(0, 12);
+      const labels = sorted.map(s => s[0]);
+      const values = sorted.map(s => s[1]);
+
+      if (chartInnovatorInst) chartInnovatorInst.destroy();
+      chartInnovatorInst = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Referenced Innovators',
+            data: values,
+            backgroundColor: 'rgba(147, 51, 234, 0.85)',
+            hoverBackgroundColor: 'rgba(126, 34, 206, 1)',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { afterLabel: () => '👉 Click to inspect innovator products' } }
+          },
+          scales: {
+            y: { grid: { color: '#f1f5f9' }, ticks: { stepSize: 1 } },
+            x: { grid: { display: false } }
+          },
+          onClick: (evt, elements) => {
+            if (elements.length > 0) {
+              const idx = elements[0].index;
+              const selectedCompany = labels[idx];
+              openProductListModalByCriteria('Innovator Company', selectedCompany, r => String(r[f.innovatorCompany] || '').trim() === selectedCompany);
+            }
+          }
+        }
+      });
+    }
+
+    // =========================================================
+    // KPI DRILLDOWN CONTROLLER (INCLUDING PHARMACOLOGICAL CLASS)
+    // =========================================================
+
+    function drilldownFromKPI(type) {
+      const f = getStandardizedFields();
+      if (type === 'all') {
+        openProductListModalByCriteria('Entire Portfolio', 'All Unified SKUs', () => true);
+      } else if (type === 'combinations') {
+        openProductListModalByCriteria('Combination Class', 'Multi-API / FDCs', r => {
+          const comp = String(r[f.composition] || '');
+          return comp.includes(';') || comp.includes('+') || comp.includes(',');
+        });
+      } else if (type === 'single') {
+        openProductListModalByCriteria('Single Molecule', 'Single Active Ingredient', r => {
+          const comp = String(r[f.composition] || '');
+          return !(comp.includes(';') || comp.includes('+') || comp.includes(','));
+        });
+      } else if (type === 'innovators') {
+        openProductListModalByCriteria('Originator Assigned', 'Known Innovator Brands', r => {
+          const inn = String(r[f.innovatorCompany] || '').toLowerCase();
+          return inn && inn !== 'not available' && inn !== '-' && inn !== 'generic';
+        });
+      } else if (type === 'pharmClass') {
+        // Opens the list of all products that possess a documented Pharmacological / Functional Class
+        openProductListModalByCriteria('Classification', 'Pharmacological & Functional Classes', r => {
+          const pClass = String(r[f.pharmClass] || '').trim();
+          return pClass && pClass !== 'Not available' && pClass !== '-' && pClass !== 'null';
+        });
+      } else if (type === 'oral') {
+        openProductListModalByCriteria('Route', 'Oral Delivery (Solid & Liquid)', r => {
+          const route = String(r[f.route] || '').toLowerCase();
+          return route.includes('oral');
+        });
+      }
+    }
+
+    function openProductListModalByCriteria(categoryLabel, titleText, filterPredicate) {
+      const matched = activeDashboardData.filter(filterPredicate);
+      modalCurrentItems = matched;
+
+      modalDrillFilterTag.textContent = categoryLabel;
+      modalDrillSubtitle.textContent = `Criteria: ${titleText}`;
+      modalDrillTitle.innerHTML = `Detailed Products: <span class="text-sky-700">${titleText}</span> (<span id="modalProductCount">${matched.length}</span>)`;
+      
+      modalSearchInput.value = '';
+      renderModalTableRows(matched);
+      productListModal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function renderModalTableRows(items) {
+      modalTableBody.innerHTML = '';
+      modalSearchStats.textContent = `Showing ${items.length} records`;
+
+      if (items.length === 0) {
+        modalTableBody.innerHTML = `
+          <tr>
+            <td colspan="9" class="text-center py-10 text-slate-400">
+              <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 opacity-40"></i>
+              No products matching criteria.
+            </td>
+          </tr>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      const f = getStandardizedFields();
+
+      items.forEach(row => {
+        const idVal = row[f.id] || '-';
+        const brandVal = row[f.brand] || '-';
+        const compVal = row[f.composition] || '-';
+        const strVal = row[f.strength] || '';
+        const areaVal = row[f.therapeutic] || '-';
+        const pClassVal = row[f.pharmClass] || '-';
+        const teamVal = row[f.team] || '-';
+        const routeVal = row[f.route] || '-';
+        const formVal = row[f.dosageForm] || '';
+        const innBrand = row[f.innovatorBrand] || '-';
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-sky-50/50 transition border-b border-slate-100";
+
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 font-mono font-bold text-sky-800">${idVal}</td>
+          <td class="py-2.5 px-3 font-bold text-slate-900">${brandVal}</td>
+          <td class="py-2.5 px-3">
+            <div class="text-slate-800 font-medium">${compVal}</div>
+            ${strVal ? `<div class="text-[10px] text-slate-400 font-mono">${strVal}</div>` : ''}
+          </td>
+          <td class="py-2.5 px-3">
+            <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-50 text-sky-700 border border-sky-200">${areaVal}</span>
+          </td>
+          <td class="py-2.5 px-3 text-slate-700 max-w-xs truncate" title="${pClassVal}">
+            <span class="font-medium text-amber-900 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">${pClassVal}</span>
+          </td>
+          <td class="py-2.5 px-3 font-medium text-slate-700">${teamVal}</td>
+          <td class="py-2.5 px-3 text-slate-600">
+            <div>${routeVal}</div>
+            ${formVal ? `<div class="text-[10px] text-slate-400">${formVal}</div>` : ''}
+          </td>
+          <td class="py-2.5 px-3 text-slate-600 font-medium">${innBrand}</td>
+          <td class="py-2.5 px-3 text-center">
+            <button onclick="openProductDossier('${row['__group_id__'] || idVal}')" class="text-[11px] font-semibold px-2.5 py-1 bg-white hover:bg-sky-600 hover:text-white text-sky-700 border border-sky-300 rounded-lg shadow-sm transition flex items-center gap-1 mx-auto">
+              <i data-lucide="file-text" class="w-3 h-3"></i> View Dossier
+            </button>
+          </td>
+        `;
+        modalTableBody.appendChild(tr);
+      });
+      lucide.createIcons();
+    }
+
+    modalSearchInput.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const f = getStandardizedFields();
+      if (!q) {
+        renderModalTableRows(modalCurrentItems);
+      } else {
+        const filtered = modalCurrentItems.filter(r => {
+          return [r[f.id], r[f.brand], r[f.composition], r[f.pharmClass], r[f.condition], r[f.therapeutic], r[f.team], r[f.innovatorCompany]]
+            .some(v => v && String(v).toLowerCase().includes(q));
+        });
+        renderModalTableRows(filtered);
+      }
+    });
+
+    function closeProductListModal() {
+      productListModal.classList.add('hidden');
+    }
+
+    modalExportBtn.addEventListener('click', () => {
+      if (modalCurrentItems.length === 0) return;
+      const ws = XLSX.utils.json_to_sheet(modalCurrentItems);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Subset");
+      XLSX.writeFile(wb, "Product_Drilldown_Subset.xlsx");
+      showToast("Filtered subset exported to Excel!");
+    });
+
+    // =========================================================
+    // SINGLE PRODUCT DOSSIER VIEWER
+    // =========================================================
+
+    function openProductDossier(idOrGroup) {
+      const f = getStandardizedFields();
+      const product = reconciledData.find(r => r["__group_id__"] === idOrGroup || r[f.id] === idOrGroup);
+      if (!product) return;
+
+      document.getElementById('dossierTitle').innerHTML = `
+        <span class="text-sky-700 font-mono">${product[f.id] || 'ID'}</span> &bull; <span>${product[f.brand] || 'Product Name'}</span>
+      `;
+
+      const container = document.getElementById('dossierContent');
+      let gridHtml = `
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Commercial Franchise</span>
+            <p class="font-semibold text-slate-800 text-sm">${product[f.team] || '-'}</p>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Therapeutic Area</span>
+            <p class="font-semibold text-sky-700 text-sm">${product[f.therapeutic] || '-'}</p>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 sm:col-span-2">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Active Ingredient(s) & Strength</span>
+            <p class="font-bold text-slate-900 text-sm">${product[f.composition] || '-'}</p>
+            <p class="text-slate-500 font-mono mt-0.5">${product[f.strength] || '-'}</p>
+          </div>
+          <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-200 sm:col-span-2">
+            <span class="text-[10px] uppercase font-bold text-amber-700 block mb-1">Pharmacological / Functional Class</span>
+            <p class="font-bold text-slate-900">${product[f.pharmClass] || '-'}</p>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Clinical Indication / Domain</span>
+            <p class="font-medium text-slate-800">${product[f.condition] || '-'}</p>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Product Type</span>
+            <p class="font-medium text-slate-800">${product[f.productType] || '-'}</p>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Delivery Route & Dosage Form</span>
+            <p class="font-medium text-slate-800">${product[f.route] || '-'} &bull; ${product[f.dosageForm] || '-'}</p>
+          </div>
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Originator / Innovator</span>
+            <p class="font-medium text-slate-800">${product[f.innovatorCompany] || '-'} (${product[f.innovatorBrand] || 'Generic'})</p>
+          </div>
+          <div class="p-3 bg-sky-50/50 rounded-xl border border-sky-100 sm:col-span-2">
+            <span class="text-[10px] uppercase font-bold text-sky-700 block mb-1">Dosage & Posology Instructions</span>
+            <p class="font-medium text-slate-800 italic">${product[f.dosage] || 'No specific clinical dosage directions referenced.'}</p>
+          </div>
+        </div>
+      `;
+
+      container.innerHTML = gridHtml;
+      dossierModal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeDossierModal() {
+      dossierModal.classList.add('hidden');
+    }
+
+    // =========================================================
+    // AUDIT TRAIL DRILLDOWN (RECONCILER ENGINE)
+    // =========================================================
+
+    window.openDrilldown = function(groupId) {
+      const sources = groupedSourceMap[groupId] || [];
+      const reconciled = reconciledData.find(r => r["__group_id__"] === groupId);
+      if (!reconciled) return;
+
+      const groupCol = groupColSelect.value;
+      const idVal = reconciled[groupCol] || groupId;
+      document.getElementById('drilldownId').textContent = idVal;
+      document.getElementById('modalSourceCount').textContent = sources.length;
+
+      const sourceTable = document.getElementById('drilldownSourceTable');
+      let srcHeader = `<thead class="bg-slate-100 text-slate-600 font-semibold border-b"><tr><th class="p-2 w-8 text-center">#</th>`;
+      headersList.forEach(col => { srcHeader += `<th class="p-2 whitespace-nowrap">${col}</th>`; });
+      srcHeader += `</tr></thead><tbody class="divide-y divide-slate-100">`;
+
+      let srcBody = '';
+      sources.forEach((sRow, idx) => {
+        srcBody += `<tr class="hover:bg-slate-50"><td class="p-2 text-center text-slate-400 font-mono">${idx + 1}</td>`;
+        headersList.forEach(col => {
+          srcBody += `<td class="p-2 whitespace-nowrap text-slate-700">${sRow[col] || '<span class="text-slate-300">-</span>'}</td>`;
+        });
+        srcBody += `</tr>`;
+      });
+      srcBody += `</tbody>`;
+      sourceTable.innerHTML = srcHeader + srcBody;
+
+      const targetTable = document.getElementById('drilldownTargetTable');
+      let tgtHeader = `<thead class="bg-emerald-100/60 text-emerald-900 font-semibold border-b border-emerald-200"><tr>`;
+      headersList.forEach(col => { tgtHeader += `<th class="p-2 whitespace-nowrap">${col}</th>`; });
+      tgtHeader += `</tr></thead><tbody><tr>`;
+
+      let tgtBody = '';
+      headersList.forEach(col => {
+        const val = reconciled[col] || '<span class="text-slate-300">-</span>';
+        tgtBody += `<td class="p-2 whitespace-nowrap font-medium text-emerald-900">${val}</td>`;
+      });
+      tgtBody += `</tr></tbody>`;
+      targetTable.innerHTML = tgtHeader + tgtBody;
+
+      drilldownModal.classList.remove('hidden');
+      lucide.createIcons();
+    };
+
+    function closeModal() { drilldownModal.classList.add('hidden'); }
+    document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+    document.getElementById('closeModalBottomBtn').addEventListener('click', closeModal);
+    drilldownModal.addEventListener('click', (e) => { if (e.target === drilldownModal) closeModal(); });
+
+    // =========================================================
+    // EXPORTS & SYSTEM RESET
+    // =========================================================
+
+    function cleanExportRows() {
+      return reconciledData.map(row => {
+        const clean = {};
+        headersList.forEach(col => {
+          clean[col] = row[col] !== undefined ? row[col] : "";
+        });
+        return clean;
+      });
+    }
+
+    exportXlsxBtn.addEventListener('click', () => {
+      if (reconciledData.length === 0) return;
+      try {
+        const ws = XLSX.utils.json_to_sheet(cleanExportRows());
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Reconciled_Products");
+        XLSX.writeFile(wb, currentFileName.endsWith('.xlsx') ? currentFileName : currentFileName + '.xlsx');
+        showToast("Excel exported successfully!");
+      } catch (err) {
+        showToast("Error generating Excel file.");
+      }
+    });
+
+    exportCsvBtn.addEventListener('click', () => {
+      if (reconciledData.length === 0) return;
+      try {
+        const ws = XLSX.utils.json_to_sheet(cleanExportRows());
+        const csvOutput = XLSX.utils.sheet_to_csv(ws);
+        const blob = new Blob([csvOutput], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = currentFileName.replace(/\.[^/.]+$/, "") + ".csv";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast("CSV file exported successfully!");
+      } catch (err) {
+        showToast("Error generating CSV file.");
+      }
+    });
+
+    copyClipboardBtn.addEventListener('click', () => {
+      if (reconciledData.length === 0) return;
+      const exportData = cleanExportRows();
+      const lines = [headersList.join('\t')];
+      exportData.forEach(row => {
+        lines.push(headersList.map(h => (row[h] !== undefined ? String(row[h]).replace(/[\t\n\r]/g, " ") : "")).join('\t'));
+      });
+      const tsvContent = lines.join('\n');
+      const tempArea = document.createElement("textarea");
+      tempArea.value = tsvContent;
+      tempArea.style.position = "fixed";
+      tempArea.style.opacity = "0";
+      document.body.appendChild(tempArea);
+      tempArea.select();
+      try {
+        document.execCommand('copy');
+        showToast("Copied TSV to clipboard!");
+      } catch (err) {
+        showToast("Failed to copy to clipboard.");
+      }
+      document.body.removeChild(tempArea);
+    });
+
+    resetAllBtn.addEventListener('click', () => {
+      rawDataset = [];
+      headersList = [];
+      reconciledData = [];
+      filteredData = [];
+      activeDashboardData = [];
+      groupedSourceMap = {};
+      fileInput.value = "";
+      groupColSelect.innerHTML = '<option value="">Upload a file first</option>';
+      groupColSelect.disabled = true;
+      processBtn.disabled = true;
+      activeFileInfo.classList.add('hidden');
+      statsSection.classList.add('hidden');
+      resultsCard.classList.add('hidden');
+      navDataBadge.classList.add('hidden');
+      switchView('reconciler');
+      showToast("Workspace reset.");
+    });
+  </script>
+</body>
+</html>
