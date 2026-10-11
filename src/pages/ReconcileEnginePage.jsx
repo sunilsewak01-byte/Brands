@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
+import Papa from 'papaparse';
 import {
   UploadCloud,
   FileSpreadsheet,
@@ -46,51 +47,104 @@ export default function ReconcileEnginePage() {
   const [isDragging, setIsDragging] = useState(false);
 
   // File parsing
-  const handleFileUpload = (file) => {
+  const handleFileUpload = async (file) => {
     if (!file) return;
 
     setFileName(file.name);
     setFileSize((file.size / 1024).toFixed(1) + ' KB');
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const parsed = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+    const processParsedData = (parsed) => {
+      if (!parsed || parsed.length === 0) {
+        showToast('The uploaded spreadsheet contains no data rows.', 'error');
+        return;
+      }
 
-        if (!parsed || parsed.length === 0) {
-          showToast('The uploaded spreadsheet contains no data rows.', 'error');
+      const headers = Object.keys(parsed[0]);
+      setRawDataset(parsed);
+      setHeadersList(headers);
+
+      // Auto select key column
+      const matchPatterns = [/product.*id/i, /prod.*id/i, /^id$/i, /code/i, /sku/i, /item.*id/i];
+      let autoSelected = headers[0];
+      for (const pattern of matchPatterns) {
+        const found = headers.find((h) => pattern.test(h.trim()));
+        if (found) {
+          autoSelected = found;
+          break;
+        }
+      }
+      setGroupKey(autoSelected);
+
+      // Run reconciliation
+      executeReconcile(parsed, autoSelected);
+      showToast(`Successfully loaded & reconciled ${parsed.length} rows!`, 'success');
+    };
+
+    try {
+      const isCsv = file.name.toLowerCase().endsWith('.csv');
+      if (isCsv) {
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => {
+            if (results.data && results.data.length > 0) {
+              processParsedData(results.data);
+            } else {
+              showToast('The uploaded CSV contains no data rows.', 'error');
+            }
+          },
+          error: (err) => {
+            console.error('CSV parse error:', err);
+            showToast('Failed to parse CSV file.', 'error');
+          }
+        });
+      } else {
+        const arrayBuffer = await file.arrayBuffer();
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(arrayBuffer);
+        const worksheet = workbook.worksheets[0];
+        if (!worksheet) {
+          showToast('The uploaded workbook contains no worksheets.', 'error');
           return;
         }
 
-        const headers = Object.keys(parsed[0]);
-        setRawDataset(parsed);
-        setHeadersList(headers);
-
-        // Auto select key column
-        const matchPatterns = [/product.*id/i, /prod.*id/i, /^id$/i, /code/i, /sku/i, /item.*id/i];
-        let autoSelected = headers[0];
-        for (const pattern of matchPatterns) {
-          const found = headers.find((h) => pattern.test(h.trim()));
-          if (found) {
-            autoSelected = found;
-            break;
+        const headers = [];
+        const parsed = [];
+        worksheet.eachRow((row, rowNumber) => {
+          if (rowNumber === 1) {
+            row.eachCell((cell, colNumber) => {
+              const val = cell.value;
+              headers[colNumber] = String(val?.text || val || '').trim();
+            });
+          } else {
+            const rowObj = {};
+            let hasAnyVal = false;
+            headers.forEach((h, colNumber) => {
+              if (!h) return;
+              const cellVal = row.getCell(colNumber).value;
+              let val = '';
+              if (cellVal !== null && cellVal !== undefined) {
+                if (typeof cellVal === 'object') {
+                  val = cellVal.text !== undefined ? cellVal.text : (cellVal.result !== undefined ? cellVal.result : JSON.stringify(cellVal));
+                } else {
+                  val = String(cellVal);
+                }
+              }
+              if (val !== '') hasAnyVal = true;
+              rowObj[h] = val;
+            });
+            if (hasAnyVal) {
+              parsed.push(rowObj);
+            }
           }
-        }
-        setGroupKey(autoSelected);
+        });
 
-        // Run reconciliation
-        executeReconcile(parsed, autoSelected);
-        showToast(`Successfully loaded & reconciled ${parsed.length} rows!`, 'success');
-      } catch (err) {
-        console.error('File parsing error:', err);
-        showToast('Failed to parse file. Please verify format (.xlsx, .csv).', 'error');
+        processParsedData(parsed);
       }
-    };
-    reader.readAsArrayBuffer(file);
+    } catch (err) {
+      console.error('File parsing error:', err);
+      showToast('Failed to parse file. Please verify format (.xlsx, .csv).', 'error');
+    }
   };
 
   const onDrop = (e) => {

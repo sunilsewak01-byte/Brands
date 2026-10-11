@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { masterDemoSample } from '../data/masterDemoData';
 
 const PortfolioContext = createContext(null);
@@ -270,24 +270,40 @@ export function PortfolioProvider({ children }) {
   };
 
   // Export utilities
-  const exportExcel = (items = filteredReconciledData, customName) => {
+  const exportExcel = async (items = filteredReconciledData, customName) => {
     if (!items || items.length === 0) {
       showToast("No data available to export.", "error");
       return;
     }
-    const cleanRows = items.map(r => {
-      const row = {};
-      headersList.forEach(col => {
-        row[col] = r[col] !== undefined ? r[col] : '';
+    try {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Reconciled_Products");
+
+      worksheet.columns = headersList.map(h => ({ header: h, key: h }));
+
+      items.forEach(r => {
+        const row = {};
+        headersList.forEach(col => {
+          row[col] = r[col] !== undefined ? r[col] : '';
+        });
+        worksheet.addRow(row);
       });
-      return row;
-    });
-    const ws = XLSX.utils.json_to_sheet(cleanRows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Reconciled_Products");
-    const outName = customName || (fileName ? fileName.replace(/\.[^/.]+$/, "") + "_reconciled.xlsx" : "ReconcileX_Portfolio.xlsx");
-    XLSX.writeFile(wb, outName);
-    showToast(`Exported ${cleanRows.length} records to Excel!`, "success");
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = customName || (fileName ? fileName.replace(/\.[^/.]+$/, "") + "_reconciled.xlsx" : "ReconcileX_Portfolio.xlsx");
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast(`Exported ${items.length} records to Excel!`, "success");
+    } catch (err) {
+      console.error("Excel export error:", err);
+      showToast("Failed to export Excel file.", "error");
+    }
   };
 
   const exportCsv = (items = filteredReconciledData, customName) => {
@@ -295,15 +311,18 @@ export function PortfolioProvider({ children }) {
       showToast("No data available to export.", "error");
       return;
     }
-    const cleanRows = items.map(r => {
-      const row = {};
-      headersList.forEach(col => {
-        row[col] = r[col] !== undefined ? r[col] : '';
-      });
-      return row;
+    const escapeCsv = (val) => {
+      const str = String(val ?? '');
+      if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+    const headerLine = headersList.map(escapeCsv).join(',');
+    const rowLines = items.map(r => {
+      return headersList.map(col => escapeCsv(r[col] !== undefined ? r[col] : '')).join(',');
     });
-    const ws = XLSX.utils.json_to_sheet(cleanRows);
-    const csv = XLSX.utils.sheet_to_csv(ws);
+    const csv = [headerLine, ...rowLines].join('\r\n');
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -313,7 +332,7 @@ export function PortfolioProvider({ children }) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast(`Exported ${cleanRows.length} records to CSV!`, "success");
+    showToast(`Exported ${items.length} records to CSV!`, "success");
   };
 
   const copyTsv = (items = filteredReconciledData) => {
