@@ -17,7 +17,7 @@ import ProductExplorerPage from './pages/ProductExplorerPage';
 import ReconcileEnginePage from './pages/ReconcileEnginePage';
 
 function AppContent() {
-  const { activePage } = usePortfolio();
+  const { activePage, dossierProduct, auditGroup, drilldownModalInfo } = usePortfolio();
 
   const renderActivePage = () => {
     switch (activePage) {
@@ -62,9 +62,9 @@ function AppContent() {
       </div>
 
       {/* Modals & Overlays */}
-      <ProductDossierModal />
-      <AuditTrailModal />
-      <ProductDrilldownModal />
+      {dossierProduct && <ProductDossierModal />}
+      {auditGroup && <AuditTrailModal />}
+      {drilldownModalInfo && <ProductDrilldownModal />}
       <Toast />
     </div>
   );
