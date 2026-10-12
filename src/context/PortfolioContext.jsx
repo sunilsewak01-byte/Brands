@@ -1,5 +1,12 @@
-import React, { createContext, useContext, useState, useMemo } from 'react';
+import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
 import ExcelJS from 'exceljs';
+import {
+  saveDatasetToSupabase,
+  fetchSavedDatasets,
+  loadDatasetById,
+  isSupabaseConfigured,
+  SUPABASE_SETUP_SQL
+} from '../services/supabase';
 
 const PortfolioContext = createContext(null);
 
@@ -11,6 +18,12 @@ export function PortfolioProvider({ children }) {
   const [groupedSourceMap, setGroupedSourceMap] = useState({});
   const [fileName, setFileName] = useState('');
   const [fileSize, setFileSize] = useState('');
+  
+  // Supabase states
+  const [isSavingSupabase, setIsSavingSupabase] = useState(false);
+  const [lastSavedToSupabase, setLastSavedToSupabase] = useState(null);
+  const [savedDatasets, setSavedDatasets] = useState([]);
+  const [sqlModalOpen, setSqlModalOpen] = useState(false);
   
   // Reconcile configuration settings
   const [groupKey, setGroupKey] = useState('');
@@ -314,23 +327,87 @@ export function PortfolioProvider({ children }) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     showToast(`Exported ${items.length} records to CSV!`, "success");
+  // Supabase actions
+  const refreshSavedDatasetsList = async () => {
+    if (!isSupabaseConfigured()) return;
+    try {
+      const list = await fetchSavedDatasets();
+      setSavedDatasets(list);
+    } catch (e) {
+      console.warn(e);
+    }
   };
 
-  const copyTsv = (items = filteredReconciledData) => {
-    if (!items || items.length === 0) {
-      showToast("No data available to copy.", "error");
-      return;
+  useEffect(() => {
+    refreshSavedDatasetsList();
+  }, []);
+
+  const saveCurrentToSupabase = async (customName) => {
+    if (!rawDataset || rawDataset.length === 0) {
+      showToast('No data to save. Please upload a dataset first.', 'error');
+      return { success: false };
     }
-    const lines = [headersList.join('\t')];
-    items.forEach(row => {
-      lines.push(headersList.map(h => (row[h] !== undefined ? String(row[h]).replace(/[\t\n\r]/g, " ") : "")).join('\t'));
-    });
-    const text = lines.join('\n');
-    navigator.clipboard.writeText(text).then(() => {
-      showToast("Copied TSV data to clipboard!", "success");
-    }).catch(() => {
-      showToast("Clipboard permission denied.", "error");
-    });
+
+    setIsSavingSupabase(true);
+    try {
+      const res = await saveDatasetToSupabase({
+        fileName: customName || fileName || 'Uploaded_Dataset.xlsx',
+        fileSize,
+        rawDataset,
+        reconciledData,
+        headersList
+      });
+
+      if (res.success) {
+        setLastSavedToSupabase(new Date().toLocaleTimeString());
+        showToast('Saved to Supabase', 'success');
+        refreshSavedDatasetsList();
+        return { success: true };
+      } else if (res.needsTableCreation) {
+        setSqlModalOpen(true);
+        showToast('Table portfolio_datasets does not exist in Supabase', 'error');
+        return { success: false, needsTableCreation: true };
+      } else {
+        showToast(res.error || 'Failed to save to Supabase', 'error');
+        return { success: false, error: res.error };
+      }
+    } catch (err) {
+      showToast(err.message || 'Error connecting to Supabase', 'error');
+      return { success: false, error: err.message };
+    } finally {
+      setIsSavingSupabase(false);
+    }
+  };
+
+  const loadSavedDataset = async (id) => {
+    try {
+      showToast('Loading from Supabase...', 'info');
+      const item = await loadDatasetById(id);
+      if (!item) {
+        showToast('Dataset not found in Supabase', 'error');
+        return;
+      }
+
+      const raw = item.raw_data || [];
+      const headers = item.headers || (raw.length > 0 ? Object.keys(raw[0]) : []);
+      
+      setFileName(item.file_name || 'Supabase_Dataset.xlsx');
+      setFileSize(item.file_size || '');
+      setHeadersList(headers);
+      setRawDataset(raw);
+
+      if (item.reconciled_data && item.reconciled_data.length > 0) {
+        setReconciledData(item.reconciled_data);
+      } else if (raw.length > 0) {
+        executeReconcile(raw, headers[0]);
+      }
+
+      setLastSavedToSupabase(new Date(item.created_at || Date.now()).toLocaleTimeString());
+      showToast(`Loaded ${item.file_name || 'dataset'} from Supabase`, 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to load dataset from Supabase', 'error');
+    }
   };
 
   return (
@@ -379,6 +456,16 @@ export function PortfolioProvider({ children }) {
         exportExcel,
         exportCsv,
         copyTsv,
+        // Supabase integrations
+        isSavingSupabase,
+        lastSavedToSupabase,
+        savedDatasets,
+        sqlModalOpen,
+        setSqlModalOpen,
+        saveCurrentToSupabase,
+        loadSavedDataset,
+        refreshSavedDatasetsList,
+        SUPABASE_SETUP_SQL,
       }}
     >
       {children}

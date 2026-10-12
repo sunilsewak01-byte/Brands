@@ -12,7 +12,14 @@ import {
   Shrink,
   Columns,
   PieChart,
-  TableProperties
+  TableProperties,
+  Database,
+  CloudUpload,
+  Copy,
+  Check,
+  X,
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
 import { usePortfolio } from '../context/PortfolioContext';
 
@@ -39,10 +46,22 @@ export default function ReconcileEnginePage() {
     setSortValues,
     executeReconcile,
     showToast,
-    setActivePage
+    setActivePage,
+    // Supabase
+    isSavingSupabase,
+    lastSavedToSupabase,
+    savedDatasets,
+    sqlModalOpen,
+    setSqlModalOpen,
+    saveCurrentToSupabase,
+    loadSavedDataset,
+    refreshSavedDatasetsList,
+    SUPABASE_SETUP_SQL
   } = usePortfolio();
 
   const [isDragging, setIsDragging] = useState(false);
+  const [copiedSql, setCopiedSql] = useState(false);
+  const [showSavedList, setShowSavedList] = useState(false);
 
   // File parsing
   const handleFileUpload = async (file) => {
@@ -177,6 +196,16 @@ export default function ReconcileEnginePage() {
                 <UploadCloud className="w-4 h-4 text-sky-600" />
                 1. Upload Data File
               </h2>
+              {savedDatasets && savedDatasets.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowSavedList(true)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
+                >
+                  <Database className="w-3.5 h-3.5 text-sky-600" />
+                  <span>Supabase ({savedDatasets.length})</span>
+                </button>
+              )}
             </div>
 
             <div
@@ -217,19 +246,39 @@ export default function ReconcileEnginePage() {
           </div>
 
           {fileName && (
-            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+            <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2.5 text-xs text-slate-600">
                 <span className="px-2 py-0.5 rounded bg-sky-100 text-sky-800 font-bold font-mono">
                   ACTIVE
                 </span>
-                <span className="font-bold text-slate-900 truncate max-w-[240px]">
+                <span className="font-bold text-slate-900 truncate max-w-[200px]">
                   {fileName}
                 </span>
                 <span className="text-slate-400">({fileSize})</span>
               </div>
-              <span className="text-xs text-emerald-600 font-bold flex items-center gap-1">
-                <CheckCircle className="w-4 h-4" /> Loaded
-              </span>
+
+              <div className="flex items-center gap-2">
+                {lastSavedToSupabase ? (
+                  <span className="text-xs text-emerald-700 font-bold flex items-center gap-1 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    Saved to Supabase
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => saveCurrentToSupabase()}
+                    disabled={isSavingSupabase || rawDataset.length === 0}
+                    className="flex items-center gap-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition shadow-sm disabled:opacity-50"
+                  >
+                    {isSavingSupabase ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Database className="w-3.5 h-3.5" />
+                    )}
+                    <span>{isSavingSupabase ? 'Saving...' : 'Save to Supabase'}</span>
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -372,9 +421,9 @@ export default function ReconcileEnginePage() {
         </div>
       )}
 
-      {/* Quick Jump Buttons */}
+      {/* Quick Jump Buttons & Supabase Action */}
       {reconciledData.length > 0 && (
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={() => setActivePage('overview')}
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs transition shadow-sm active:scale-95"
@@ -389,6 +438,145 @@ export default function ReconcileEnginePage() {
             <TableProperties className="w-4 h-4" />
             <span>Product Master Table</span>
           </button>
+          <button
+            onClick={() => saveCurrentToSupabase()}
+            disabled={isSavingSupabase}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs transition shadow-sm disabled:opacity-50"
+          >
+            {isSavingSupabase ? (
+              <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
+            ) : (
+              <Database className="w-4 h-4 text-emerald-600" />
+            )}
+            <span>{isSavingSupabase ? 'Saving...' : 'Save to Supabase'}</span>
+          </button>
+        </div>
+      )}
+
+      {/* Supabase Saved Datasets Modal */}
+      {showSavedList && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <Database className="w-4 h-4 text-sky-600" />
+                <h3 className="font-extrabold text-sm text-slate-900">Supabase Datasets</h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={refreshSavedDatasetsList}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                  title="Refresh"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setShowSavedList(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-4 max-h-80 overflow-y-auto space-y-2">
+              {savedDatasets && savedDatasets.length > 0 ? (
+                savedDatasets.map((ds) => (
+                  <div
+                    key={ds.id}
+                    className="flex items-center justify-between p-3 rounded-xl border border-slate-200/80 hover:border-sky-300 hover:bg-sky-50/30 transition text-xs"
+                  >
+                    <div>
+                      <p className="font-bold text-slate-900">{ds.file_name || 'Dataset'}</p>
+                      <p className="text-slate-400 font-medium">
+                        {ds.row_count || 0} rows • {ds.created_at ? new Date(ds.created_at).toLocaleDateString() : ''}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        loadSavedDataset(ds.id);
+                        setShowSavedList(false);
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-bold transition"
+                    >
+                      Load
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <div className="py-8 text-center text-xs text-slate-400 font-semibold">
+                  No datasets stored in Supabase yet.
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-slate-100 flex justify-end">
+              <button
+                onClick={() => setShowSavedList(false)}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Supabase SQL Table Setup Modal */}
+      {sqlModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <Database className="w-4 h-4 text-sky-600" />
+                <h3 className="font-extrabold text-sm text-slate-900">Supabase Table Setup</h3>
+              </div>
+              <button
+                onClick={() => setSqlModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="mt-4">
+              <div className="relative">
+                <pre className="p-3 bg-slate-900 text-emerald-400 text-xs font-mono rounded-xl overflow-x-auto max-h-64 selection:bg-emerald-900 selection:text-white">
+                  {SUPABASE_SETUP_SQL}
+                </pre>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(SUPABASE_SETUP_SQL);
+                    setCopiedSql(true);
+                    setTimeout(() => setCopiedSql(false), 2000);
+                  }}
+                  className="absolute top-2 right-2 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition shadow"
+                >
+                  {copiedSql ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Copy SQL</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-slate-100 flex justify-end">
+              <button
+                onClick={() => setSqlModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

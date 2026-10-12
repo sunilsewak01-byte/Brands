@@ -23,7 +23,11 @@ export default function Navbar() {
     filteredReconciledData,
     exportExcel,
     exportCsv,
-    copyTsv
+    copyTsv,
+    rawDataset,
+    saveCurrentToSupabase,
+    isSavingSupabase,
+    lastSavedToSupabase
   } = usePortfolio();
 
   const getPageInfo = () => {
@@ -119,6 +123,17 @@ export default function Navbar() {
               <Copy className="w-3.5 h-3.5 text-slate-500" />
               <span className="hidden sm:inline">TSV</span>
             </button>
+            {rawDataset.length > 0 && (
+              <button
+                onClick={() => saveCurrentToSupabase()}
+                disabled={isSavingSupabase}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 shadow-sm transition disabled:opacity-50"
+                title="Save to Supabase"
+              >
+                <Database className="w-3.5 h-3.5 text-emerald-600" />
+                <span className="hidden sm:inline">{isSavingSupabase ? 'Saving...' : 'Supabase'}</span>
+              </button>
+            )}
           </div>
 
           {/* Quick Engine Link */}
