@@ -47,10 +47,9 @@ export default function ProductDrilldownModal() {
               <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-sky-100 text-sky-800 border border-sky-200">
                 {tag}
               </span>
-              <span className="text-xs text-slate-400">Drilldown Selection</span>
             </div>
             <h3 className="text-base font-bold text-slate-900 mt-1">
-              Detailed Product Subset: <span className="text-sky-700">{title}</span> ({filteredItems.length} items)
+              <span className="text-sky-700">{title}</span> ({filteredItems.length})
             </h3>
           </div>
 
@@ -60,7 +59,7 @@ export default function ProductDrilldownModal() {
               className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center gap-1.5 shadow-sm active:scale-95"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Export Subset</span>
+              <span>Export</span>
             </button>
             <button
               onClick={() => setDrilldownModalInfo(null)}
@@ -77,14 +76,14 @@ export default function ProductDrilldownModal() {
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search within this drilldown (Brand, Molecule, Class, Franchise)..."
+              placeholder="Search..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="w-full text-xs pl-9 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg custom-ring text-slate-800"
             />
           </div>
           <span className="text-xs text-slate-500 font-medium whitespace-nowrap">
-            Showing {filteredItems.length} of {items.length} records
+            {filteredItems.length} / {items.length}
           </span>
         </div>
 
@@ -165,7 +164,7 @@ export default function ProductDrilldownModal() {
                           className="text-[11px] font-semibold px-2.5 py-1 bg-white hover:bg-sky-600 hover:text-white text-sky-700 border border-sky-300 rounded-lg shadow-sm transition flex items-center gap-1 mx-auto"
                         >
                           <FileText className="w-3 h-3" />
-                          <span>View Dossier</span>
+                          <span>View</span>
                         </button>
                       </td>
                     </tr>
@@ -177,10 +176,7 @@ export default function ProductDrilldownModal() {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
-          <span>
-            Click <strong className="text-sky-700">View Dossier</strong> on any row to inspect complete clinical & posology specs.
-          </span>
+        <div className="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-end items-center text-xs text-slate-500">
           <button
             onClick={() => setDrilldownModalInfo(null)}
             className="font-semibold px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg transition"

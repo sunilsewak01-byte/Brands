@@ -54,11 +54,6 @@ function AppContent() {
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
           {renderActivePage()}
         </main>
-
-        {/* Global Footer */}
-        <footer className="bg-white border-t border-slate-200/80 px-6 py-2.5 text-center text-xs text-slate-400 select-none">
-          Pharmaceutical Portfolio Reconciler & Executive Analytics Studio &bull; Client-Side Secure & Confidential
-        </footer>
       </div>
 
       {/* Modals & Overlays */}

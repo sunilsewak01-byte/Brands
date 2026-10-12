@@ -99,7 +99,6 @@ export default function MoleculesPage() {
         <StatCard
           title="Distinct Molecules (APIs)"
           value={apiFrequency.length}
-          subtitle="Unique Active Substances"
           icon={FlaskConical}
           colorScheme="sky"
           onClick={() => setViewTab('apis')}
@@ -107,7 +106,6 @@ export default function MoleculesPage() {
         <StatCard
           title="Pharmacological Classes"
           value={pharmClasses.length}
-          subtitle="Functional MOA Groups"
           icon={Dna}
           colorScheme="amber"
           onClick={() => setViewTab('classes')}
@@ -115,7 +113,6 @@ export default function MoleculesPage() {
         <StatCard
           title="FDC Combinations"
           value={fdcProducts.length}
-          subtitle="Fixed Synergy Products"
           icon={GitMerge}
           colorScheme="indigo"
           onClick={() => setViewTab('fdcs')}
@@ -123,7 +120,6 @@ export default function MoleculesPage() {
         <StatCard
           title="Single Molecules"
           value={singleProducts.length}
-          subtitle="Monotherapy Portfolio"
           icon={Pill}
           colorScheme="emerald"
           onClick={() =>
@@ -144,7 +140,7 @@ export default function MoleculesPage() {
               viewTab === 'classes' ? 'bg-white text-amber-800 shadow-sm' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            Functional Classes ({pharmClasses.length})
+            Classes ({pharmClasses.length})
           </button>
           <button
             onClick={() => setViewTab('apis')}
@@ -152,7 +148,7 @@ export default function MoleculesPage() {
               viewTab === 'apis' ? 'bg-white text-sky-800 shadow-sm' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            Active APIs ({apiFrequency.length})
+            APIs ({apiFrequency.length})
           </button>
           <button
             onClick={() => setViewTab('fdcs')}
@@ -160,7 +156,7 @@ export default function MoleculesPage() {
               viewTab === 'fdcs' ? 'bg-white text-indigo-800 shadow-sm' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            FDC Synergy Matrix ({fdcProducts.length})
+            FDCs ({fdcProducts.length})
           </button>
         </div>
 
@@ -222,7 +218,7 @@ export default function MoleculesPage() {
                 }
                 className="w-full py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-semibold transition text-center"
               >
-                Inspect All in {pc.name}
+                Inspect {pc.name}
               </button>
             </div>
           ))}
@@ -237,9 +233,6 @@ export default function MoleculesPage() {
               <FlaskConical className="w-4 h-4 text-sky-600" />
               Active Pharmaceutical Ingredients Frequency
             </h3>
-            <span className="text-xs text-slate-400 font-medium">
-              Sorted by frequency in catalog
-            </span>
           </div>
 
           <div className="overflow-x-auto">

@@ -1,10 +1,8 @@
 import React from 'react';
-import { ArrowRight } from 'lucide-react';
 
 export default function StatCard({
   title,
   value,
-  subtitle,
   icon: Icon,
   colorScheme = 'sky', // 'sky', 'indigo', 'emerald', 'purple', 'amber', 'cyan', 'rose'
   onClick,
@@ -87,12 +85,6 @@ export default function StatCard({
         <span className={`text-2xl sm:text-3xl font-black tracking-tight ${schemeStyles.valueColor}`}>
           {value}
         </span>
-        {subtitle && (
-          <p className={`text-[11px] font-semibold flex items-center gap-1 mt-1 ${schemeStyles.subColor}`}>
-            <span>{subtitle}</span>
-            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-          </p>
-        )}
       </div>
     </div>
   );

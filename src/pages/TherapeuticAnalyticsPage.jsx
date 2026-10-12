@@ -72,7 +72,6 @@ export default function TherapeuticAnalyticsPage() {
         <StatCard
           title="Therapeutic Areas"
           value={totalTherapies}
-          subtitle="Active Therapy Domains"
           icon={Activity}
           colorScheme="sky"
           onClick={() => openDrilldown('Therapeutic Areas', 'All Therapy Areas', () => true)}
@@ -80,7 +79,6 @@ export default function TherapeuticAnalyticsPage() {
         <StatCard
           title="Clinical Conditions"
           value={totalConditions}
-          subtitle="Documented Indications"
           icon={Stethoscope}
           colorScheme="indigo"
           onClick={() => openDrilldown('Clinical Conditions', 'All Indication Domains', () => true)}
@@ -88,7 +86,6 @@ export default function TherapeuticAnalyticsPage() {
         <StatCard
           title="Leading Therapy Area"
           value={topTherapy}
-          subtitle="Highest Volume"
           icon={HeartPulse}
           colorScheme="purple"
           onClick={() => {
@@ -100,7 +97,6 @@ export default function TherapeuticAnalyticsPage() {
         <StatCard
           title="Portfolio SKUs"
           value={filteredReconciledData.length}
-          subtitle="Therapy Catalog Size"
           icon={Layers}
           colorScheme="emerald"
           onClick={() => openDrilldown('Entire Portfolio', 'All Products', () => true)}
@@ -243,7 +239,7 @@ export default function TherapeuticAnalyticsPage() {
                 }
                 className="w-full mt-3 py-2 px-3 rounded-xl bg-slate-50 hover:bg-sky-50 text-sky-700 font-semibold text-xs transition border border-slate-200/80 hover:border-sky-200 flex items-center justify-center gap-1.5"
               >
-                <span>Inspect all {tg.products.length} products in {tg.area}</span>
+                <span>Inspect Products ({tg.products.length})</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>

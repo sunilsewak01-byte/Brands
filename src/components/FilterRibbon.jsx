@@ -27,17 +27,17 @@ export default function FilterRibbon() {
             <Filter className="w-3.5 h-3.5" />
           </div>
           <span className="text-xs font-bold uppercase tracking-wider text-slate-800">
-            Portfolio Dynamic Cross-Filters
+            Filters
           </span>
           {isFiltered && (
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold border border-amber-200">
-              Active Filter
+              Active
             </span>
           )}
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium text-slate-500">
-            Showing <strong className="text-sky-700 font-bold">{filteredReconciledData.length}</strong> of {reconciledData.length} records
+            <strong className="text-sky-700 font-bold">{filteredReconciledData.length}</strong> / {reconciledData.length}
           </span>
           {isFiltered && (
             <button

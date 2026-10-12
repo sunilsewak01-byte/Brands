@@ -208,7 +208,6 @@ export default function ExecutiveDashboardPage() {
         <StatCard
           title="Total Products"
           value={metrics.total}
-          subtitle="Click to view all"
           icon={Package}
           colorScheme="sky"
           onClick={() =>
@@ -218,7 +217,6 @@ export default function ExecutiveDashboardPage() {
         <StatCard
           title="FDCs / Multi-APIs"
           value={metrics.fdc}
-          subtitle="Fixed combinations"
           icon={GitMerge}
           colorScheme="indigo"
           onClick={() =>
@@ -231,7 +229,6 @@ export default function ExecutiveDashboardPage() {
         <StatCard
           title="Single Active"
           value={metrics.single}
-          subtitle="Single molecule"
           icon={Pill}
           colorScheme="emerald"
           onClick={() =>
@@ -244,7 +241,6 @@ export default function ExecutiveDashboardPage() {
         <StatCard
           title="Innovator Origin"
           value={metrics.innovator}
-          subtitle="Originator brands"
           icon={Award}
           colorScheme="purple"
           onClick={() =>
@@ -257,7 +253,6 @@ export default function ExecutiveDashboardPage() {
         <StatCard
           title="Pharm Classes"
           value={metrics.classes}
-          subtitle="Functional classes"
           icon={Dna}
           colorScheme="amber"
           onClick={() =>
@@ -270,7 +265,6 @@ export default function ExecutiveDashboardPage() {
         <StatCard
           title="Oral Delivery"
           value={metrics.oral}
-          subtitle="Tablets / Capsules"
           icon={ShieldCheck}
           colorScheme="cyan"
           onClick={() =>
@@ -293,7 +287,6 @@ export default function ExecutiveDashboardPage() {
                 <Activity className="w-4 h-4 text-sky-600" />
                 Therapeutic Area Distribution
               </h3>
-              <p className="text-[11px] text-slate-400">Click any bar to inspect matching products</p>
             </div>
             <button
               onClick={() => setActivePage('therapeutic')}
@@ -335,7 +328,6 @@ export default function ExecutiveDashboardPage() {
                 <Users className="w-4 h-4 text-indigo-600" />
                 Commercial Franchise Allocation
               </h3>
-              <p className="text-[11px] text-slate-400">Click any team bar to view franchise SKUs</p>
             </div>
             <button
               onClick={() => setActivePage('commercial')}
@@ -376,7 +368,6 @@ export default function ExecutiveDashboardPage() {
                 <PieIcon className="w-4 h-4 text-emerald-600" />
                 Product Classification Mix
               </h3>
-              <p className="text-[11px] text-slate-400">Click any doughnut slice to isolate products</p>
             </div>
             <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold uppercase">
               Segments
@@ -411,7 +402,6 @@ export default function ExecutiveDashboardPage() {
                 <Compass className="w-4 h-4 text-amber-600" />
                 Delivery Route Modality
               </h3>
-              <p className="text-[11px] text-slate-400">Click any pie slice to filter route</p>
             </div>
             <span className="text-[10px] px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-bold uppercase">
               Delivery
@@ -446,9 +436,6 @@ export default function ExecutiveDashboardPage() {
                 <Award className="w-4 h-4 text-purple-600" />
                 Top Originator & Innovator Footprint
               </h3>
-              <p className="text-[11px] text-slate-400">
-                Pharmaceutical corporations with referenced originator brands
-              </p>
             </div>
             <button
               onClick={() => setActivePage('innovators')}

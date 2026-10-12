@@ -32,7 +32,6 @@ export default function Sidebar() {
     {
       id: 'overview',
       label: 'Executive Overview',
-      subtitle: 'KPIs & Global Mix',
       icon: LayoutDashboard,
       badge: null,
       section: 'ANALYTICAL SUITES'
@@ -40,7 +39,6 @@ export default function Sidebar() {
     {
       id: 'therapeutic',
       label: 'Therapeutic & Clinical',
-      subtitle: 'Therapy & Indications',
       icon: Activity,
       badge: null,
       section: 'ANALYTICAL SUITES'
@@ -48,7 +46,6 @@ export default function Sidebar() {
     {
       id: 'molecules',
       label: 'Molecules & Forms',
-      subtitle: 'APIs, FDCs & Classes',
       icon: FlaskConical,
       badge: null,
       section: 'ANALYTICAL SUITES'
@@ -56,7 +53,6 @@ export default function Sidebar() {
     {
       id: 'commercial',
       label: 'Commercial Teams',
-      subtitle: 'Franchise Portfolios',
       icon: Users,
       badge: null,
       section: 'ANALYTICAL SUITES'
@@ -64,7 +60,6 @@ export default function Sidebar() {
     {
       id: 'innovators',
       label: 'Originator & Innovators',
-      subtitle: 'Brand Benchmarking',
       icon: Award,
       badge: null,
       section: 'ANALYTICAL SUITES'
@@ -72,7 +67,6 @@ export default function Sidebar() {
     {
       id: 'explorer',
       label: 'Product Master Explorer',
-      subtitle: 'Unified Dossiers & Table',
       icon: TableProperties,
       badge: reconciledData.length > 0 ? reconciledData.length : null,
       section: 'ANALYTICAL SUITES'
@@ -80,7 +74,6 @@ export default function Sidebar() {
     {
       id: 'reconcile',
       label: 'Reconcile Engine',
-      subtitle: 'Excel Ingest & Deduplication',
       icon: GitMerge,
       badge: rawDataset.length > 0 ? `${rawDataset.length} rows` : 'Ready',
       section: 'DATA OPS & RECONCILIATION'
@@ -109,7 +102,6 @@ export default function Sidebar() {
                   Pro
                 </span>
               </div>
-              <span className="text-[11px] text-slate-400 truncate">Pharma Portfolio Studio</span>
             </div>
           )}
         </div>
@@ -119,7 +111,6 @@ export default function Sidebar() {
           <button
             onClick={() => setCollapsed(!collapsed)}
             className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition"
-            title="Collapse sidebar"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -131,7 +122,6 @@ export default function Sidebar() {
           <button
             onClick={() => setCollapsed(false)}
             className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition"
-            title="Expand sidebar"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -156,7 +146,7 @@ export default function Sidebar() {
                   <button
                     key={item.id}
                     onClick={() => setActivePage(item.id)}
-                    title={collapsed ? `${item.label} - ${item.subtitle}` : undefined}
+                    title={collapsed ? item.label : undefined}
                     className={`w-full group flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-150 ${
                       isActive
                         ? 'bg-gradient-to-r from-sky-600 to-indigo-600 text-white font-medium shadow-md shadow-sky-600/20'
@@ -170,10 +160,7 @@ export default function Sidebar() {
                     />
                     {!collapsed && (
                       <div className="flex-1 truncate">
-                        <div className="text-xs font-semibold leading-tight text-white">{item.label}</div>
-                        <div className={`text-[10px] leading-tight truncate ${isActive ? 'text-sky-100' : 'text-slate-500'}`}>
-                          {item.subtitle}
-                        </div>
+                        <span className="text-xs font-semibold leading-tight text-white">{item.label}</span>
                       </div>
                     )}
                     {!collapsed && item.badge && (
@@ -200,7 +187,7 @@ export default function Sidebar() {
         <div className="px-3 py-2 mx-3 mb-3 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center justify-between text-xs">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="text-[11px] text-slate-300">Live Workspace</span>
+            <span className="text-[11px] text-slate-300">Workspace</span>
           </div>
           <span className="text-[11px] font-mono font-bold text-sky-400">
             {reconciledData.length} SKUs
@@ -215,7 +202,6 @@ export default function Sidebar() {
           className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-slate-300 bg-slate-800/80 hover:bg-slate-800 hover:text-white transition border border-slate-700/60 shadow-sm ${
             collapsed ? 'justify-center' : ''
           }`}
-          title="Reload Master Pharma Dataset"
         >
           <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
           {!collapsed && <span>Load Master Sample</span>}
@@ -226,10 +212,9 @@ export default function Sidebar() {
           className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition border border-transparent hover:border-rose-500/30 ${
             collapsed ? 'justify-center' : ''
           }`}
-          title="Reset Workspace"
         >
           <RotateCcw className="w-4 h-4 shrink-0" />
-          {!collapsed && <span>Reset Workspace</span>}
+          {!collapsed && <span>Reset</span>}
         </button>
       </div>
     </aside>

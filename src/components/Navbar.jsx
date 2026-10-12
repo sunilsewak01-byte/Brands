@@ -29,42 +29,21 @@ export default function Navbar() {
   const getPageInfo = () => {
     switch (activePage) {
       case 'overview':
-        return {
-          title: 'Executive Portfolio Studio',
-          subtitle: 'High-level KPIs, therapeutic distributions, franchise splits & originator footprint'
-        };
+        return { title: 'Executive Portfolio Studio' };
       case 'therapeutic':
-        return {
-          title: 'Therapeutic & Clinical Intelligence',
-          subtitle: 'Detailed analysis across clinical domains, therapeutic indications & medical roles'
-        };
+        return { title: 'Therapeutic & Clinical Intelligence' };
       case 'molecules':
-        return {
-          title: 'Molecules & Formulation Studio',
-          subtitle: 'Monotherapy vs FDC fixed combinations, API strengths & functional pharmacological classes'
-        };
+        return { title: 'Molecules & Formulation Studio' };
       case 'commercial':
-        return {
-          title: 'Commercial Franchises & Teams',
-          subtitle: 'Division portfolios, therapeutic assignments, route modalities & business unit metrics'
-        };
+        return { title: 'Commercial Franchises & Teams' };
       case 'innovators':
-        return {
-          title: 'Originator & Innovator Landscape',
-          subtitle: 'Global innovator brand reference benchmarks, patent originator mapping & generic equivalents'
-        };
+        return { title: 'Originator & Innovator Landscape' };
       case 'explorer':
-        return {
-          title: 'Unified Product Master Explorer',
-          subtitle: 'Comprehensive searchable dossier table with multi-column sorting and regulatory drilldown'
-        };
+        return { title: 'Unified Product Master Explorer' };
       case 'reconcile':
-        return {
-          title: 'Reconciliation & Data Engine',
-          subtitle: 'Multi-row deduplication, custom delimiter tokenization and source row audit trails'
-        };
+        return { title: 'Reconciliation & Data Engine' };
       default:
-        return { title: 'ReconcileX Studio', subtitle: 'Pharma Portfolio Intelligence' };
+        return { title: 'ReconcileX Studio' };
     }
   };
 
@@ -90,9 +69,6 @@ export default function Navbar() {
               {filteredReconciledData.length} of {reconciledData.length} SKUs
             </span>
           </div>
-          <p className="text-xs text-slate-500 font-normal mt-0.5">
-            {pageInfo.subtitle}
-          </p>
         </div>
 
         {/* Global Controls & Actions */}
@@ -102,7 +78,7 @@ export default function Navbar() {
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search portfolio..."
+              placeholder="Search..."
               value={filters.searchQuery}
               onChange={(e) => updateFilter('searchQuery', e.target.value)}
               className="w-full text-xs pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg custom-ring text-slate-800 placeholder-slate-400 focus:bg-white transition"
@@ -114,10 +90,9 @@ export default function Navbar() {
             <button
               onClick={clearAllFilters}
               className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition"
-              title="Clear all active filters"
             >
               <FilterX className="w-3.5 h-3.5" />
-              <span>Reset Filters</span>
+              <span>Reset</span>
             </button>
           )}
 
@@ -126,7 +101,6 @@ export default function Navbar() {
             <button
               onClick={() => exportExcel()}
               className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition active:scale-95"
-              title="Export Current View to Excel (.xlsx)"
             >
               <Download className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Excel</span>
@@ -134,7 +108,6 @@ export default function Navbar() {
             <button
               onClick={() => exportCsv()}
               className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-sm transition"
-              title="Export to CSV"
             >
               <FileSpreadsheet className="w-3.5 h-3.5 text-blue-600" />
               <span className="hidden sm:inline">CSV</span>
@@ -142,7 +115,6 @@ export default function Navbar() {
             <button
               onClick={() => copyTsv()}
               className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-sm transition"
-              title="Copy Tab-Separated Values to Clipboard"
             >
               <Copy className="w-3.5 h-3.5 text-slate-500" />
               <span className="hidden sm:inline">TSV</span>
@@ -156,7 +128,7 @@ export default function Navbar() {
               className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 transition"
             >
               <PlusCircle className="w-3.5 h-3.5" />
-              <span>Upload / Reconcile</span>
+              <span>Reconcile</span>
             </button>
           )}
         </div>

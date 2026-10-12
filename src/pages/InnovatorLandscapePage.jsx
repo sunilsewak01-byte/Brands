@@ -67,7 +67,6 @@ export default function InnovatorLandscapePage() {
         <StatCard
           title="Originator Companies"
           value={assignedInnovators.length}
-          subtitle="Referenced Global Pharma"
           icon={Building2}
           colorScheme="purple"
           onClick={() => openDrilldown('Originators', 'Innovator Originators', () => true)}
@@ -75,7 +74,6 @@ export default function InnovatorLandscapePage() {
         <StatCard
           title="Innovator-Referenced SKUs"
           value={totalAssignedProducts}
-          subtitle="Products with Known Origin"
           icon={Award}
           colorScheme="sky"
           onClick={() =>
@@ -88,7 +86,6 @@ export default function InnovatorLandscapePage() {
         <StatCard
           title="Top Originator Partner"
           value={assignedInnovators[0] ? assignedInnovators[0].company : 'N/A'}
-          subtitle={assignedInnovators[0] ? `${assignedInnovators[0].products.length} Products` : ''}
           icon={Shield}
           colorScheme="indigo"
           onClick={() => {
@@ -100,7 +97,6 @@ export default function InnovatorLandscapePage() {
         <StatCard
           title="Innovator Brands"
           value={assignedInnovators.reduce((acc, g) => acc + g.brands.size, 0)}
-          subtitle="Benchmark Brands"
           icon={CheckCircle2}
           colorScheme="emerald"
           onClick={() => openDrilldown('Originator Brands', 'All Innovator Brands', () => true)}
@@ -142,9 +138,6 @@ export default function InnovatorLandscapePage() {
                   </div>
                   <div>
                     <h4 className="font-extrabold text-base text-slate-900">{ig.company}</h4>
-                    <p className="text-[11px] text-slate-400">
-                      Originator of {ig.brands.size} benchmark brand{ig.brands.size > 1 ? 's' : ''}
-                    </p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -203,7 +196,7 @@ export default function InnovatorLandscapePage() {
               }
               className="w-full py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-800 text-xs font-semibold transition text-center flex items-center justify-center gap-1.5"
             >
-              <span>Inspect {ig.company} Products ({ig.products.length})</span>
+              <span>Inspect Products ({ig.products.length})</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>

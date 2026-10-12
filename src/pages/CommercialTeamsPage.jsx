@@ -58,7 +58,6 @@ export default function CommercialTeamsPage() {
         <StatCard
           title="Commercial Franchises"
           value={teamGroups.length}
-          subtitle="Active Sales Divisions"
           icon={Users}
           colorScheme="indigo"
           onClick={() => openDrilldown('Franchises', 'Commercial Divisions', () => true)}
@@ -66,7 +65,6 @@ export default function CommercialTeamsPage() {
         <StatCard
           title="Leading Franchise"
           value={teamGroups[0] ? `${teamGroups[0].team} (${teamGroups[0].products.length} SKUs)` : 'N/A'}
-          subtitle="Highest Portfolio Share"
           icon={Briefcase}
           colorScheme="sky"
           onClick={() => {
@@ -78,7 +76,6 @@ export default function CommercialTeamsPage() {
         <StatCard
           title="Catalog SKUs"
           value={filteredReconciledData.length}
-          subtitle="Total Divisional Products"
           icon={Package}
           colorScheme="emerald"
           onClick={() => openDrilldown('Entire Portfolio', 'All Products', () => true)}
@@ -86,7 +83,6 @@ export default function CommercialTeamsPage() {
         <StatCard
           title="Therapeutic Reach"
           value={new Set(filteredReconciledData.map((r) => r[f.therapeutic])).size}
-          subtitle="Covered Therapy Areas"
           icon={Activity}
           colorScheme="purple"
           onClick={() => openDrilldown('Therapy Reach', 'All Therapies', () => true)}
@@ -147,9 +143,6 @@ export default function CommercialTeamsPage() {
                     </div>
                     <div>
                       <h4 className="font-extrabold text-base text-slate-900">{tg.team}</h4>
-                      <p className="text-[11px] text-slate-400">
-                        {tg.therapies.size} Therapy Domain{tg.therapies.size > 1 ? 's' : ''}
-                      </p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -227,7 +220,7 @@ export default function CommercialTeamsPage() {
                 }
                 className="w-full py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 text-xs font-semibold transition text-center flex items-center justify-center gap-1.5"
               >
-                <span>View Full {tg.team} Catalog ({tg.products.length})</span>
+                <span>View Catalog ({tg.products.length})</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>

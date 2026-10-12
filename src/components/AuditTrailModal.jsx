@@ -24,9 +24,6 @@ export default function AuditTrailModal() {
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-100 text-amber-800">
                   Audit Trail
                 </span>
-                <span className="text-xs text-slate-500 font-medium">
-                  Multi-Row Source Comparison
-                </span>
               </div>
               <h3 className="text-lg font-black text-slate-900 mt-0.5">
                 Consolidated Record: <span className="text-sky-700 font-mono">{idVal}</span>
@@ -49,9 +46,8 @@ export default function AuditTrailModal() {
             <div className="flex items-center justify-between mb-2">
               <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                Original Input Rows ({sources.length} raw rows detected)
+                Input Rows ({sources.length})
               </h4>
-              <span className="text-[11px] text-slate-400 font-medium">Pre-merge state</span>
             </div>
             <div className="overflow-x-auto border border-slate-200 rounded-2xl shadow-sm">
               <table className="w-full text-left text-xs border-collapse">
@@ -88,9 +84,8 @@ export default function AuditTrailModal() {
           </div>
 
           <div className="flex justify-center">
-            <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-200">
-              <ArrowDown className="w-3.5 h-3.5 animate-bounce" />
-              <span>Deduplicated & Tokenized into Unified Product</span>
+            <div className="flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200">
+              <ArrowDown className="w-4 h-4 animate-bounce" />
             </div>
           </div>
 
@@ -99,9 +94,8 @@ export default function AuditTrailModal() {
             <div className="flex items-center justify-between mb-2">
               <h4 className="text-xs font-bold text-emerald-700 uppercase tracking-wider flex items-center gap-1.5">
                 <CheckCircle className="w-4 h-4 text-emerald-600" />
-                Resulting Reconciled Product Row
+                Reconciled Record
               </h4>
-              <span className="text-[11px] text-emerald-600 font-bold">Consolidated output</span>
             </div>
             <div className="overflow-x-auto border-2 border-emerald-200 bg-emerald-50/20 rounded-2xl shadow-sm">
               <table className="w-full text-left text-xs border-collapse">
@@ -141,7 +135,7 @@ export default function AuditTrailModal() {
             onClick={() => setAuditGroup(null)}
             className="px-5 py-2 font-bold text-xs bg-slate-800 hover:bg-slate-900 text-white rounded-xl transition"
           >
-            Close Audit Trail
+            Close
           </button>
         </div>
 

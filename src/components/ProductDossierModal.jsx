@@ -151,16 +151,12 @@ export default function ProductDossierModal() {
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
-          <div className="flex items-center gap-1.5 text-emerald-600 font-medium">
-            <CheckCircle className="w-4 h-4" />
-            <span>Verified Dossier Specification</span>
-          </div>
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end text-xs text-slate-500">
           <button
             onClick={() => setDossierProduct(null)}
             className="px-5 py-2 font-bold text-xs bg-slate-800 hover:bg-slate-900 text-white rounded-xl shadow-sm transition active:scale-95"
           >
-            Close Dossier
+            Close
           </button>
         </div>
 

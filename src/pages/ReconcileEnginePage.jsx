@@ -179,9 +179,6 @@ export default function ReconcileEnginePage() {
                 <UploadCloud className="w-4 h-4 text-sky-600" />
                 1. Upload Data File
               </h2>
-              <span className="text-xs text-slate-400 font-medium">
-                Supports .xlsx, .xls, .csv
-              </span>
             </div>
 
             <div
@@ -218,9 +215,6 @@ export default function ReconcileEnginePage() {
               <p className="text-sm font-bold text-slate-800">
                 <span className="text-sky-600 underline underline-offset-2">Click to browse</span> or drag & drop your spreadsheet
               </p>
-              <p className="text-xs text-slate-400 mt-1">
-                Reconcile raw multi-row records or load pre-reconciled pharmaceutical catalogs
-              </p>
 
               <div className="mt-4">
                 <button
@@ -232,7 +226,7 @@ export default function ReconcileEnginePage() {
                   className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 transition"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                  <span>Or Load Master Sample Dataset (18 SKUs)</span>
+                  <span>Load Master Dataset</span>
                 </button>
               </div>
             </div>
@@ -344,7 +338,7 @@ export default function ReconcileEnginePage() {
             className="w-full mt-4 py-2.5 px-4 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white font-bold text-xs rounded-xl shadow-md shadow-sky-600/20 transition flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed active:scale-98"
           >
             <Play className="w-4 h-4 fill-current" />
-            <span>Reconcile & Open Dashboard</span>
+            <span>Reconcile</span>
           </button>
         </div>
       </div>
@@ -402,14 +396,14 @@ export default function ReconcileEnginePage() {
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs transition shadow-sm active:scale-95"
           >
             <PieChart className="w-4 h-4" />
-            <span>Launch Executive Dashboard</span>
+            <span>Executive Dashboard</span>
           </button>
           <button
             onClick={() => setActivePage('explorer')}
             className="flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs transition shadow-sm"
           >
             <TableProperties className="w-4 h-4" />
-            <span>Inspect Product Master Table</span>
+            <span>Product Master Table</span>
           </button>
         </div>
       )}

@@ -74,7 +74,7 @@ export default function ProductExplorerPage() {
               </span>
             </div>
             <span className="text-xs text-slate-500 font-medium">
-              ({total} records in view)
+              ({total})
             </span>
           </div>
 
@@ -84,7 +84,7 @@ export default function ProductExplorerPage() {
               className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center gap-1.5 shadow-sm active:scale-95"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Export Excel</span>
+              <span>Excel</span>
             </button>
             <button
               onClick={() => exportCsv()}
@@ -98,7 +98,7 @@ export default function ProductExplorerPage() {
               className="text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition flex items-center gap-1"
             >
               <Copy className="w-3.5 h-3.5" />
-              <span>Copy TSV</span>
+              <span>TSV</span>
             </button>
           </div>
         </div>
@@ -118,7 +118,6 @@ export default function ProductExplorerPage() {
                       key={col}
                       onClick={() => handleHeaderClick(col)}
                       className="py-3 px-3 whitespace-nowrap cursor-pointer hover:bg-slate-200/60 transition"
-                      title="Click to sort"
                     >
                       <div className="flex items-center gap-1.5">
                         {isKey && <Key className="w-3 h-3 text-sky-600" />}
@@ -162,7 +161,6 @@ export default function ProductExplorerPage() {
                               ? 'bg-amber-100 text-amber-800 border-amber-200 shadow-sm'
                               : 'bg-slate-100 text-slate-500 border-slate-200'
                           }`}
-                          title={isMerged ? `${mergeCount} original source rows merged` : '1 raw row'}
                         >
                           <Layers className="w-2.5 h-2.5" />
                           <span>{mergeCount}</span>
@@ -234,7 +232,7 @@ export default function ProductExplorerPage() {
               <option value={100}>100</option>
             </select>
             <span className="ml-2 font-medium">
-              Showing {total > 0 ? startIdx + 1 : 0} to {endIdx} of {total} records
+              {total > 0 ? startIdx + 1 : 0}-{endIdx} of {total}
             </span>
           </div>
 
@@ -247,7 +245,7 @@ export default function ProductExplorerPage() {
               <ChevronLeft className="w-4 h-4" />
             </button>
             <span className="px-3 font-bold text-slate-800">
-              Page {currentPage} of {maxPages}
+              {currentPage} / {maxPages}
             </span>
             <button
               onClick={() => setCurrentPage((p) => Math.min(maxPages, p + 1))}
