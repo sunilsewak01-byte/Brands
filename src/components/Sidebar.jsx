@@ -7,7 +7,6 @@ import {
   Award,
   TableProperties,
   GitMerge,
-  Sparkles,
   RotateCcw,
   ChevronLeft,
   ChevronRight,
@@ -22,7 +21,6 @@ export default function Sidebar() {
     setActivePage,
     reconciledData,
     rawDataset,
-    loadMasterData,
     resetAll
   } = usePortfolio();
 
@@ -196,17 +194,7 @@ export default function Sidebar() {
       )}
 
       {/* Footer Actions */}
-      <div className="p-3 border-t border-slate-800 bg-slate-950/50 space-y-2">
-        <button
-          onClick={loadMasterData}
-          className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-slate-300 bg-slate-800/80 hover:bg-slate-800 hover:text-white transition border border-slate-700/60 shadow-sm ${
-            collapsed ? 'justify-center' : ''
-          }`}
-        >
-          <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
-          {!collapsed && <span>Load Master Sample</span>}
-        </button>
-
+      <div className="p-3 border-t border-slate-800 bg-slate-950/50">
         <button
           onClick={resetAll}
           className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition border border-transparent hover:border-rose-500/30 ${

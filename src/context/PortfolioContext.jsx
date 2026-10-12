@@ -1,11 +1,10 @@
-import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
+import React, { createContext, useContext, useState, useMemo } from 'react';
 import ExcelJS from 'exceljs';
-import { masterDemoSample } from '../data/masterDemoData';
 
 const PortfolioContext = createContext(null);
 
 export function PortfolioProvider({ children }) {
-  const [activePage, setActivePage] = useState('overview'); // overview, therapeutic, molecules, commercial, innovators, explorer, reconcile
+  const [activePage, setActivePage] = useState('reconcile'); // overview, therapeutic, molecules, commercial, innovators, explorer, reconcile
   const [rawDataset, setRawDataset] = useState([]);
   const [headersList, setHeadersList] = useState([]);
   const [reconciledData, setReconciledData] = useState([]);
@@ -153,24 +152,6 @@ export function PortfolioProvider({ children }) {
     setGroupKey(effectiveGroupKey);
     return unifiedList;
   };
-
-  // Load master demo dataset
-  const loadMasterData = () => {
-    const cloned = JSON.parse(JSON.stringify(masterDemoSample));
-    setRawDataset(cloned);
-    const headers = Object.keys(cloned[0]);
-    setHeadersList(headers);
-    setFileName("Pharma_Portfolio_Master_Sample.xlsx");
-    setFileSize("38.2 KB");
-    setGroupKey(headers.find(h => /product.*id/i.test(h)) || headers[0]);
-    executeReconcile(cloned, headers.find(h => /product.*id/i.test(h)) || headers[0]);
-    showToast("Master Sample loaded: 18 unified pharma products ready!", "success");
-  };
-
-  // Initialize with master sample on initial mount
-  useEffect(() => {
-    loadMasterData();
-  }, []);
 
   // Filtered dataset for all analytical views
   const filteredReconciledData = useMemo(() => {
@@ -378,7 +359,6 @@ export function PortfolioProvider({ children }) {
         sortValues,
         setSortValues,
         executeReconcile,
-        loadMasterData,
         resetAll,
         filters,
         updateFilter,

@@ -12,8 +12,7 @@ import {
   Shrink,
   Columns,
   PieChart,
-  TableProperties,
-  Sparkles
+  TableProperties
 } from 'lucide-react';
 import { usePortfolio } from '../context/PortfolioContext';
 
@@ -39,7 +38,6 @@ export default function ReconcileEnginePage() {
     sortValues,
     setSortValues,
     executeReconcile,
-    loadMasterData,
     showToast,
     setActivePage
   } = usePortfolio();
@@ -215,20 +213,6 @@ export default function ReconcileEnginePage() {
               <p className="text-sm font-bold text-slate-800">
                 <span className="text-sky-600 underline underline-offset-2">Click to browse</span> or drag & drop your spreadsheet
               </p>
-
-              <div className="mt-4">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    loadMasterData();
-                  }}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 transition"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                  <span>Load Master Dataset</span>
-                </button>
-              </div>
             </div>
           </div>
 
